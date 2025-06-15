@@ -1,16 +1,31 @@
-import express from "express";
-import dotenv from "dotenv";
-import authRoutes from "./routes/auth.routes.js";
-import { connectDB } from "./lib/db.js";
-const app = express();
+/* 
+--------------------------------- Explanation -----------------------------------
+In the code above, each comment serves to clarify the purpose of the corresponding line or block of code. For instance, the comment // Importing the express framework for building web applications succinctly describes the role of the express import, making it easier for developers to understand the code's functionality at a glance.
 
-dotenv.config();
+Similarly, comments like // Middleware to parse JSON request bodies and // Mounting the authentication routes at the /api/auth endpoint provide context on how the application processes incoming requests and organizes its routing structure.
 
-const PORT = process.env.PORT || 3000;
+The final comment, // Calling the function to connect to the database, indicates that the application is establishing a connection to the database, which is crucial for its operation. Each comment enhances the readability and maintainability of the code, ensuring that future developers can quickly grasp the intent behind each line.
+*/
 
-app.use("/api/auth", authRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  connectDB();
+import express from "express"; // Importing the express framework for building web applications
+import dotenv from "dotenv"; // Importing dotenv to manage environment variables
+import cookieParser from "cookie-parser"; // Importing cookie-parser to parse cookies in requests
+import authRoutes from "./routes/auth.routes.js"; // Importing authentication routes from a separate module
+import { connectDB } from "./lib/db.js"; // Importing the database connection function
+
+const app = express(); // Creating an instance of an Express application
+
+dotenv.config(); // Loading environment variables from a .env file
+
+const PORT = process.env.PORT || 3000; // Setting the port to the value from environment variables or defaulting to 3000
+
+app.use(express.json()); // Middleware to parse JSON request bodies
+app.use(cookieParser()); // Middleware to parse cookies from requests
+
+app.use("/api/auth", authRoutes); // Mounting the authentication routes at the /api/auth endpoint
+
+app.listen(PORT, () => { // Starting the server and listening on the specified port
+  console.log(`Server is running on port ${PORT}`); // Logging a message to the console indicating the server is running
+  connectDB(); // Calling the function to connect to the database
 });
