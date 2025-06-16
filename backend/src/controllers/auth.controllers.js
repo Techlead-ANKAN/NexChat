@@ -1,6 +1,7 @@
 import User from "../models/user.models.js"; // Importing the User model for database operations
 import bcrypt from "bcryptjs"; // Importing bcrypt for password hashing
 import { generateToken } from "../utils/utils.js"; // Importing the token generation utility
+import cloudinary from "../lib/cloudinary.js";
 
 // Signup function to handle user registration
 export const signup = async (req, res) => {
@@ -99,4 +100,33 @@ export const logout = (req, res) => {
 // Update profile function placeholder
 export const updateProfile = async (req, res) => {
   // Functionality to be implemented
+  try {
+    const { profilePic } = req.body;
+    const userId = req.user._id;
+
+    if (!profilePic) {
+      return res.status(400).json({ message: "profile pic is required" });
+    }
+
+    const uploadResponse = await cloudinary.uploader.upload(profilePic);
+    const updatedUser = await User.findById(
+      userId,
+      { profilePic: uploadResponse.secure_url },
+      { new: true }
+    );
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.log("Error in updateProfile: ", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const checkAuth = async (req, res) => {
+  try {
+    res.status(200).json(req.user);
+  } catch (error) {
+    console.log("Error in checkAuth controller", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 };
