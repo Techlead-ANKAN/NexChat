@@ -12,6 +12,7 @@ import express from "express"; // Importing the express framework for building w
 import dotenv from "dotenv"; // Importing dotenv to manage environment variables
 import cookieParser from "cookie-parser"; // Importing cookie-parser to parse cookies in requests
 import authRoutes from "./routes/auth.routes.js"; // Importing authentication routes from a separate module
+import messageRoutes from "./routes/message.routes.js"; // Importing message routes from a separate module
 import { connectDB } from "./lib/db.js"; // Importing the database connection function
 
 const app = express(); // Creating an instance of an Express application
@@ -24,6 +25,7 @@ app.use(express.json()); // Middleware to parse JSON request bodies
 app.use(cookieParser()); // Middleware to parse cookies from requests
 
 app.use("/api/auth", authRoutes); // Mounting the authentication routes at the /api/auth endpoint
+app.use("/api/message", messageRoutes); // Mounting the message routes at the /api/message endpoint
 
 app.listen(PORT, () => { // Starting the server and listening on the specified port
   console.log(`Server is running on port ${PORT}`); // Logging a message to the console indicating the server is running

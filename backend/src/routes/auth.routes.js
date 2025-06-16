@@ -36,6 +36,7 @@ router.post("/logout", logout);
 // Route for updating user profile, protected by middleware, calls the updateProfile function from the controller
 router.put("/update-profile", protectRoute, updateProfile);
 
+// Route for checking user authentication status, protected by middleware, calls the checkAuth function from the controller
 router.get("/check", protectRoute, checkAuth);
 
 export default router; // Exporting the router for use in other parts of the application
