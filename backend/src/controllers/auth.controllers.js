@@ -101,6 +101,7 @@ export const logout = (req, res) => {
 export const updateProfile = async (req, res) => {
   // Functionality to be implemented
   try {
+    console.log("BODY:", req.body);
     const { profilePic } = req.body;
     const userId = req.user._id;
 
@@ -109,7 +110,7 @@ export const updateProfile = async (req, res) => {
     }
 
     const uploadResponse = await cloudinary.uploader.upload(profilePic);
-    const updatedUser = await User.findById(
+    const updatedUser = await User.findByIdAndUpdate(
       userId,
       { profilePic: uploadResponse.secure_url },
       { new: true }
@@ -117,6 +118,7 @@ export const updateProfile = async (req, res) => {
 
     res.status(200).json(updatedUser);
   } catch (error) {
+    console.error(error); 
     console.log("Error in updateProfile: ", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
