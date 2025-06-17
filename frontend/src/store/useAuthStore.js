@@ -80,4 +80,17 @@ export const useAuthStore = create((set) => ({
       set({ isLoggingIn: false });
     }
   },
+
+  updateProfile: async (data) => {
+    set({ isUpdatingProfile: true });
+    try {
+      // Make sure this endpoint matches your backend
+      const res = await axiosInstance.put("/user/update-profile", data);
+      // Optionally update authUser in state here
+      set({ authUser: res.data });
+    } catch (err) {
+      alert("Upload failed: " + err.message);
+    }
+    set({ isUpdatingProfile: false });
+  },
 }));
