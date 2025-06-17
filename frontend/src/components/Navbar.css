@@ -1,0 +1,336 @@
+/* Navbar.css */
+.nexchat-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.3);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    height: 60px;
+}
+
+.nexchat-navbar-scrolled {
+    background: rgba(9, 14, 26, 0.85);
+    box-shadow: 0 4px 20px rgba(14, 165, 233, 0.1);
+}
+
+.nexchat-navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    height: 100%;
+    width: 100%;
+}
+
+.nexchat-logo-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 0.75rem;
+}
+
+.nexchat-logo-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(to right, rgb(14, 165, 233), rgb(34, 197, 94), rgb(236, 72, 153));
+    border-radius: 0.6rem;
+    position: relative;
+}
+
+.nexchat-logo-glow {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgb(14, 165, 233), rgb(34, 197, 94), rgb(236, 72, 153));
+    border-radius: 0.6rem;
+    filter: blur(10px);
+    opacity: 0.5;
+}
+
+.nexchat-logo-icon-inner {
+    width: 18px;
+    height: 18px;
+    color: white;
+    position: relative;
+    z-index: 10;
+}
+
+.nexchat-user-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.nexchat-login-button,
+.nexchat-signup-button {
+    display: none;
+    padding: 0.35rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+@media (min-width: 768px) {
+
+    .nexchat-login-button,
+    .nexchat-signup-button {
+        display: block;
+    }
+}
+
+.nexchat-login-button {
+    color: #e2e8f0;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.nexchat-login-button:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nexchat-signup-button {
+    background: linear-gradient(to right, #0ea5e9, #22c55e);
+    color: white;
+    border: none;
+}
+
+.nexchat-signup-button:hover {
+    background: linear-gradient(to right, #0284c7, #16a34a);
+}
+
+.nexchat-user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.nexchat-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(to right, #0ea5e9, #22c55e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.nexchat-logout-button {
+    background: transparent;
+    border: none;
+    color: #e2e8f0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s;
+}
+
+.nexchat-logout-button:hover {
+    color: #ef4444;
+}
+
+.nexchat-mobile-menu-button {
+    background: transparent;
+    border: none;
+    color: #e2e8f0;
+    cursor: pointer;
+    display: block;
+    z-index: 100;
+    padding: 0.25rem;
+}
+
+@media (min-width: 768px) {
+    .nexchat-mobile-menu-button {
+        display: none;
+    }
+}
+
+/* Mobile Navigation */
+.nexchat-mobile-nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: rgba(9, 14, 26, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.nexchat-mobile-nav-links {
+    list-style: none;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.nexchat-mobile-login-button,
+.nexchat-mobile-signup-button,
+.nexchat-mobile-logout-button {
+    display: block;
+    padding: 0.7rem 0;
+    color: #e2e8f0;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: color 0.3s;
+    text-align: center;
+}
+
+.nexchat-mobile-login-button {
+    color: #e2e8f0;
+    background: transparent;
+    border: none;
+    width: 100%;
+}
+
+.nexchat-mobile-login-button:hover {
+    color: #0ea5e9;
+}
+
+.nexchat-mobile-signup-button {
+    background: linear-gradient(to right, #0ea5e9, #22c55e);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.65rem 1.3rem;
+    margin-top: 0.5rem;
+}
+
+.nexchat-mobile-logout-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    padding: 0.7rem 0;
+    font-size: 0.95rem;
+}
+
+.nexchat-mobile-logout-button:hover {
+    color: #dc2626;
+}
+
+.nexchat-mr-2 {
+    margin-right: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .nexchat-navbar-container {
+        padding: 0 1rem;
+    }
+
+    .nexchat-logo-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .nexchat-logo-icon-inner {
+        width: 16px;
+        height: 16px;
+    }
+
+    .nexchat-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 0.85rem;
+    }
+
+    .nexchat-mobile-menu-button {
+        padding: 0.2rem;
+    }
+
+    .nexchat-login-button,
+    .nexchat-signup-button {
+        padding: 0.3rem 0.8rem;
+        font-size: 0.85rem;
+    }
+}
+
+/* Add to Navbar.css */
+
+/* Settings button */
+.nexchat-settings-button {
+    background: transparent;
+    border: none;
+    color: #e2e8f0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s;
+    padding: 0.25rem;
+    border-radius: 50%;
+}
+
+.nexchat-settings-button:hover {
+    color: #0ea5e9;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Make avatar clickable */
+.nexchat-avatar {
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.nexchat-avatar:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
+}
+
+/* Mobile buttons */
+.nexchat-mobile-profile-button,
+.nexchat-mobile-settings-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #e2e8f0;
+    padding: 0.7rem 0;
+    font-size: 0.95rem;
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nexchat-mobile-profile-button {
+    color: #0ea5e9;
+}
+
+.nexchat-mobile-profile-button:hover {
+    color: #38bdf8;
+}
+
+.nexchat-mobile-settings-button {
+    color: #22c55e;
+}
+
+.nexchat-mobile-settings-button:hover {
+    color: #4ade80;
+}
+
+/* Adjust spacing between buttons */
+.nexchat-user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    /* Increased from 0.6rem */
+}
