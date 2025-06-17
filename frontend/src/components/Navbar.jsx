@@ -3,12 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, User, LogOut, Settings } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import "./Navbar.css";
-
+import { useNavigate } from "react-router-dom";
 const Navbar = () => {
   const { logout, authUser } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-
+  const navigate = useNavigate();
   const handleLogout = () => {
     logout();
     setIsOpen(false);
@@ -21,7 +21,9 @@ const Navbar = () => {
   };
 
   const handleProfile = () => {
+
     // Placeholder for profile functionality
+    navigate("/profile");
     console.log("Profile clicked");
     setIsOpen(false);
   };
