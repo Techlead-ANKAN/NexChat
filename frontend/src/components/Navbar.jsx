@@ -80,14 +80,14 @@ const Navbar = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <motion.button
+              {/* <motion.button
                 className="nexchat-settings-button"
                 onClick={handleSettings}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
                 <Settings size={18} />
-              </motion.button>
+              </motion.button> */}
 
               <div
                 className="nexchat-avatar"

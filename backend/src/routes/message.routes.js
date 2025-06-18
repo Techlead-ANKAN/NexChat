@@ -13,7 +13,7 @@ import { sendMessage } from "../controllers/message.controller.js";
 const router = express.Router();
 
 // Defining a GET route to fetch users for the sidebar, protected by authentication middleware
-router.get("/user", protectRoute, getUsersForSidebar);
+router.get("/users", protectRoute, getUsersForSidebar);
 
 // Defining a GET route to fetch messages by user ID, protected by authentication middleware
 router.get("/:id", protectRoute, getMessages);

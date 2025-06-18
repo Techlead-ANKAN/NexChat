@@ -34,7 +34,7 @@ app.use(
   })
 );
 app.use("/api/auth", authRoutes); // Mounting the authentication routes at the /api/auth endpoint
-app.use("/api/message", messageRoutes); // Mounting the message routes at the /api/message endpoint
+app.use("/api/messages", messageRoutes); // Mounting the message routes at the /api/message endpoint
 
 app.put("/api/user/update-profile", protectRoute, updateProfile);
 app.listen(PORT, () => {
