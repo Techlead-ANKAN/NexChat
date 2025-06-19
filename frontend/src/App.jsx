@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import Navbar from './components/Navbar'
 import { Routes, Route, Navigate } from "react-router-dom"
 import Home from './pages/Home/Home.jsx'
+import ModernHome from './pages/Home/ModernHome.jsx'
 import Signup from './pages/Signup/Signup.jsx'
 import Login from './pages/Login/Login.jsx'
 import Settings from './pages/Settings.jsx'
@@ -26,10 +27,9 @@ const App = () => {
 
   return (
     <div>
-      <Navbar />
-
       <Routes>
-        <Route path="/" element={authUser ? <Home /> : <Navigate to="/login" />} />
+        <Route path="/" element={authUser ? <ModernHome /> : <Navigate to="/login" />} />
+        <Route path="/classic" element={authUser ? <Home /> : <Navigate to="/login" />} />
         <Route path="/signup" element={!authUser ? <Signup /> : <Navigate to="/" />} />
         <Route path="/login" element={!authUser ? <Login /> : <Navigate to="/" />} />
         <Route path="/settings" element={<Settings />} />
