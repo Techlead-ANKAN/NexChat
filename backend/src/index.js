@@ -16,11 +16,15 @@ import { connectDB } from "./lib/db.js"; // Importing the database connection fu
 import cors from "cors";
 import { updateProfile } from "./controllers/auth.controllers.js";
 import { protectRoute } from "./middlewares/auth.middleware.js";
-import {app, server} from "./lib/socket.js";
+import { app, server } from "./lib/socket.js";
+
+import path from "path";
 
 dotenv.config(); // Loading environment variables from a .env file
 
 const PORT = process.env.PORT || 3000; // Setting the port to the value from environment variables or defaulting to 3000
+
+const __dirname = path.resolve();
 
 app.use(express.json({ limit: "10mb" })); // Middleware to parse JSON request bodies
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
@@ -34,6 +38,14 @@ app.use(
 );
 app.use("/api/auth", authRoutes); // Mounting the authentication routes at the /api/auth endpoint
 app.use("/api/messages", messageRoutes); // Mounting the message routes at the /api/message endpoint
+
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+  });
+}
 
 app.put("/api/user/update-profile", protectRoute, updateProfile);
 server.listen(PORT, () => {
