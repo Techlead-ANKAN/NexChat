@@ -9,6 +9,8 @@ The comments also highlight specific actions, such as excluding sensitive inform
 import User from "../models/user.models.js"; // Importing the User model for database operations
 import Message from "../models/message.models.js"; // Importing the Message model for database operations
 
+import cloudinary from "../lib/cloudinary.js";
+
 // Controller to fetch users for the sidebar
 export const getUsersForSidebar = async (req, res) => {
   try {
@@ -55,7 +57,7 @@ export const sendMessage = async (req, res) => {
     if (image) {
       // Uploading base64 image to cloudinary if an image is provided
       const uploadResponse = await cloudinary.uploader.upload(image); // Uploading the image to Cloudinary
-      imageUrl = uploadResponse.secureUrl; // Storing the secure URL of the uploaded image
+      imageUrl = uploadResponse.secure_url; // Storing the secure URL of the uploaded image
     }
 
     const newMessage = new Message({
