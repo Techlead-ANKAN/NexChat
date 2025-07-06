@@ -16,8 +16,7 @@ import { connectDB } from "./lib/db.js"; // Importing the database connection fu
 import cors from "cors";
 import { updateProfile } from "./controllers/auth.controllers.js";
 import { protectRoute } from "./middlewares/auth.middleware.js";
-
-const app = express(); // Creating an instance of an Express application
+import {app, server} from "./lib/socket.js";
 
 dotenv.config(); // Loading environment variables from a .env file
 
@@ -37,7 +36,7 @@ app.use("/api/auth", authRoutes); // Mounting the authentication routes at the /
 app.use("/api/messages", messageRoutes); // Mounting the message routes at the /api/message endpoint
 
 app.put("/api/user/update-profile", protectRoute, updateProfile);
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   // Starting the server and listening on the specified port
   console.log(`Server is running on port ${PORT}`); // Logging a message to the console indicating the server is running
   connectDB(); // Calling the function to connect to the database

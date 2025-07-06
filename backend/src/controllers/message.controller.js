@@ -5,11 +5,12 @@ In the provided code, comments have been added to clarify the purpose and functi
 The comments also highlight specific actions, such as excluding sensitive information (like passwords) from the user data and the process of uploading images to Cloudinary. Additionally, a placeholder comment is included for future implementation of real-time messaging functionality using socket.io. This structured commenting approach enhances code readability and maintainability, making it easier for developers to understand the logic and flow of the application.
 */
 
-
 import User from "../models/user.models.js"; // Importing the User model for database operations
 import Message from "../models/message.models.js"; // Importing the Message model for database operations
 
 import cloudinary from "../lib/cloudinary.js";
+
+import {getReceiverSocketId, io} from "../lib/socket.js"
 
 // Controller to fetch users for the sidebar
 export const getUsersForSidebar = async (req, res) => {
@@ -70,7 +71,10 @@ export const sendMessage = async (req, res) => {
 
     await newMessage.save(); // Saving the new message to the database
 
-    // TODO: Implement real-time functionality using socket.io here
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", newMessage); // Emitting a new
+    }
 
     res.status(201).json(newMessage); // Sending the newly created message as a JSON response
   } catch (error) {
