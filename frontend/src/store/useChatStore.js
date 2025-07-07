@@ -34,6 +34,19 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
+  // sendMessage: async (messageData) => {
+  //   const { selectedUser, messages } = get();
+  //   try {
+  //     const res = await axiosInstance.post(
+  //       `/messages/send/${selectedUser._id}`,
+  //       messageData
+  //     );
+  //     set({ messages: [...messages, res.data] });
+  //   } catch (error) {
+  //     toast.error(error.response.data.message);
+  //   }
+  // },
+
   sendMessage: async (messageData) => {
     const { selectedUser, messages } = get();
     try {
@@ -43,7 +56,17 @@ export const useChatStore = create((set, get) => ({
       );
       set({ messages: [...messages, res.data] });
     } catch (error) {
-      toast.error(error.response.data.message);
+      // Handle error properly
+      let errorMessage = "Failed to send message";
+      if (error.response) {
+        if (error.response.status === 413) {
+          errorMessage = "Image is too large. Please use a smaller file.";
+        } else {
+          errorMessage = error.response.data?.message || errorMessage;
+        }
+      }
+      toast.error(errorMessage);
+      throw error; // Propagate error to calling function
     }
   },
 
@@ -66,5 +89,5 @@ export const useChatStore = create((set, get) => ({
 
   setSelectedUser: (selectedUser) => {
     set({ selectedUser });
-  }
+  },
 }));
