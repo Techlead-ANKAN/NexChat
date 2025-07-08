@@ -130,7 +130,7 @@ app.use(cors(corsOptions));
 
 // API Routes
 app.use("/api/auth", authRoutes);
-// app.use("/api/messages", messageRoutes);
+app.use("/api/messages", messageRoutes);
 
 // Serve static files in production
 if (process.env.NODE_ENV === "production") {
