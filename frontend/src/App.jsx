@@ -20,9 +20,17 @@ const App = () => {
 
   console.log({ onlineUsers });
 
+
+
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  useEffect(() => {
+    if ("Notification" in window) {
+      Notification.requestPermission();
+    }
+  }, []);
 
   console.log({ authUser });
 

@@ -188,7 +188,7 @@ import { useAuthStore } from "./useAuthStore.js";
 export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
-  selectedUser: null, // Fixed: was selectedUsers
+  selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
   unreadCounts: {},
@@ -248,24 +248,45 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
 
+    // Request notification permission if needed
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+
+    const showNotification = (title, body) => {
+      console.log("🔔 Triggering Notification:", title, body);
+      if (Notification.permission === "granted") {
+        const notification = new Notification(title, {
+          body,
+          icon: "/nexchat-logo.png", // Place this in /public folder
+        });
+
+        // Optional: Focus the app when clicked
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+      }
+    };
+
     socket.off("newMessage"); // prevent duplicates
     socket.on("newMessage", (newMessage) => {
-      console.log("📩 New message received via socket:", newMessage);
+      console.log("📩 Received new message:", newMessage);
 
       const selectedUser = get().selectedUser;
       const messages = get().messages;
       const unreadCounts = get().unreadCounts;
 
-      // 🔁 If currently chatting with that sender
-      if (selectedUser && newMessage.senderId === selectedUser._id) {
-        const alreadyExists = messages.some(
-          (msg) => msg._id === newMessage._id
-        );
-        if (!alreadyExists) {
-          set({ messages: [...messages, newMessage] });
-        }
+      // Add message to current chat (if same user)
+      const alreadyExists = messages.some((msg) => msg._id === newMessage._id);
+      if (
+        selectedUser &&
+        newMessage.senderId === selectedUser._id &&
+        !alreadyExists
+      ) {
+        set({ messages: [...messages, newMessage] });
       } else {
-        // 🔔 Show unread badge
+        // Increment unread count
         const currentCount = unreadCounts[newMessage.senderId] || 0;
         set({
           unreadCounts: {
@@ -274,6 +295,12 @@ export const useChatStore = create((set, get) => ({
           },
         });
       }
+
+      // Show notification always
+      showNotification(
+        `Message from ${newMessage.senderName || "Someone"}`,
+        newMessage.text || "You received a new message"
+      );
     });
   },
 
