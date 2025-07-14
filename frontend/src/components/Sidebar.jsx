@@ -112,7 +112,7 @@ const Sidebar = () => {
   useEffect(() => {
     getUsers();
     fetchUnreadCounts();
-  }, []);
+  }, [getUsers]);
 
   const filteredUsers = showOnlineOnly
     ? users.filter((user) => onlineUsers.includes(user._id))

@@ -248,22 +248,28 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     if (!socket) return;
 
+    socket.off("newMessage"); // prevent duplicates
     socket.on("newMessage", (newMessage) => {
       console.log("📩 New message received via socket:", newMessage);
 
-      const { selectedUser, messages, unreadCounts } = get();
+      const selectedUser = get().selectedUser;
+      const messages = get().messages;
+      const unreadCounts = get().unreadCounts;
 
-      // If chatting with the sender, just append the message
+      // 🔁 If currently chatting with that sender
       if (selectedUser && newMessage.senderId === selectedUser._id) {
-        set({ messages: [...messages, newMessage] });
+        const alreadyExists = messages.some(
+          (msg) => msg._id === newMessage._id
+        );
+        if (!alreadyExists) {
+          set({ messages: [...messages, newMessage] });
+        }
       } else {
-        // 💡 Get fresh unreadCounts every time
-        const updatedCounts = get().unreadCounts;
-        const currentCount = updatedCounts[newMessage.senderId] || 0;
-
+        // 🔔 Show unread badge
+        const currentCount = unreadCounts[newMessage.senderId] || 0;
         set({
           unreadCounts: {
-            ...updatedCounts,
+            ...unreadCounts,
             [newMessage.senderId]: currentCount + 1,
           },
         });
