@@ -22,21 +22,29 @@ import mongoose from "mongoose"; // Importing mongoose library for MongoDB objec
 // Defining the message schema using mongoose
 const messageSchema = new mongoose.Schema(
   {
-    senderId: { // Field for the ID of the sender
+    senderId: {
+      // Field for the ID of the sender
       type: mongoose.Schema.Types.ObjectId, // Specifying the type as ObjectId
       ref: "User", // Reference to the User model
       required: true, // This field is mandatory
     },
-    receiverId: { // Field for the ID of the receiver
+    receiverId: {
+      // Field for the ID of the receiver
       type: mongoose.Schema.Types.ObjectId, // Specifying the type as ObjectId
       ref: "User", // Reference to the User model
       required: true, // This field is mandatory
     },
-    text: { // Field for the message text
+    text: {
+      // Field for the message text
       type: String, // Specifying the type as String
     },
-    image: { // Field for the message image
+    image: {
+      // Field for the message image
       type: String, // Specifying the type as String
+    },
+    read: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true } // Enabling timestamps for createdAt and updatedAt fields
