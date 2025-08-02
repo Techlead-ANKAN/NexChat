@@ -29,10 +29,17 @@ const messageSchema = new mongoose.Schema(
       required: true, // This field is mandatory
     },
     receiverId: {
-      // Field for the ID of the receiver
+      // Field for the ID of the receiver (null for group messages)
       type: mongoose.Schema.Types.ObjectId, // Specifying the type as ObjectId
       ref: "User", // Reference to the User model
-      required: true, // This field is mandatory
+      required: false, // Not required for group messages
+    },
+    chatType: {
+      // Field to distinguish between direct and group messages
+      type: String,
+      enum: ["direct", "group"],
+      default: "direct",
+      required: true,
     },
     text: {
       // Field for the message text
