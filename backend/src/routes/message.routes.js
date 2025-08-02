@@ -33,6 +33,8 @@ import {
   sendMessage,
   markMessagesAsRead,
   getUnreadMessageCounts,
+  getGroupMessages,
+  sendGroupMessage,
 } from "../controllers/message.controller.js";
 
 const router = express.Router();
@@ -41,6 +43,10 @@ const router = express.Router();
 router.get("/users", protectRoute, getUsersForSidebar);
 router.get("/unread-counts", protectRoute, getUnreadMessageCounts);
 router.post("/mark-read", protectRoute, markMessagesAsRead);
+
+// Group chat routes
+router.get("/group/messages", protectRoute, getGroupMessages);
+router.post("/group/send", protectRoute, sendGroupMessage);
 
 // 👇 Dynamic route goes LAST
 router.get("/:id", protectRoute, getMessages);

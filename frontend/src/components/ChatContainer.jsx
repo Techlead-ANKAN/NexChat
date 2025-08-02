@@ -11,8 +11,10 @@ const ChatContainer = () => {
   const {
     messages,
     getMessages,
+    getGroupMessages,
     isMessagesLoading,
     selectedUser,
+    selectedChat,
     subscribeToMessages,
     unsubscribeFromMessages,
   } = useChatStore();
@@ -20,12 +22,16 @@ const ChatContainer = () => {
   const messageEndRef = useRef(null);
 
   useEffect(() => {
-    getMessages(selectedUser._id);
+    if (selectedChat === "group") {
+      getGroupMessages();
+    } else if (selectedUser) {
+      getMessages(selectedUser._id);
+    }
 
     subscribeToMessages();
 
     return () => unsubscribeFromMessages();
-  }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
+  }, [selectedUser, selectedChat, getMessages, getGroupMessages, subscribeToMessages, unsubscribeFromMessages]);
 
   useEffect(() => {
     if (messageEndRef.current && messages) {
@@ -51,22 +57,35 @@ const ChatContainer = () => {
         {messages.map((message) => (
           <div
             key={message._id}
-            className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
+            className={`chat ${
+              (selectedChat === "group" ? message.senderId._id : message.senderId) === authUser._id 
+                ? "chat-end" 
+                : "chat-start"
+            }`}
             ref={messageEndRef}
           >
             <div className=" chat-image avatar">
               <div className="size-10 rounded-full border">
                 <img
                   src={
-                    message.senderId === authUser._id
-                      ? authUser.profilePic || "/avatar.png"
-                      : selectedUser.profilePic || "/avatar.png"
+                    selectedChat === "group"
+                      ? (message.senderId._id === authUser._id 
+                          ? authUser.profilePic || "/avatar.png"
+                          : message.senderId.profilePic || "/avatar.png")
+                      : (message.senderId === authUser._id
+                          ? authUser.profilePic || "/avatar.png"
+                          : selectedUser.profilePic || "/avatar.png")
                   }
                   alt="profile pic"
                 />
               </div>
             </div>
             <div className="chat-header mb-1">
+              {selectedChat === "group" && message.senderId._id !== authUser._id && (
+                <span className="text-xs opacity-70 mr-2">
+                  {message.senderId.fullName}
+                </span>
+              )}
               <time className="text-xs opacity-50 ml-1">
                 {formatMessageTime(message.createdAt)}
               </time>

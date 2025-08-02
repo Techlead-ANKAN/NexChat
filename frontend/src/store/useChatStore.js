@@ -189,6 +189,7 @@ export const useChatStore = create((set, get) => ({
   messages: [],
   users: [],
   selectedUser: null,
+  selectedChat: null, // null for P2P, "group" for group chat
   isUsersLoading: false,
   isMessagesLoading: false,
   unreadCounts: {},
@@ -217,18 +218,38 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
-  sendMessage: async (messageData) => {
-    const { selectedUser, messages } = get();
-    if (!selectedUser || !selectedUser._id) {
-      toast.error("No user selected or invalid user ID");
-      return;
-    }
-
+  // New function to get group messages
+  getGroupMessages: async () => {
+    set({ isMessagesLoading: true });
     try {
-      const res = await axiosInstance.post(
-        `/messages/send/${selectedUser._id}`,
-        messageData
-      );
+      const res = await axiosInstance.get("/messages/group/messages");
+      set({ messages: res.data });
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to fetch group messages");
+    } finally {
+      set({ isMessagesLoading: false });
+    }
+  },
+
+  sendMessage: async (messageData) => {
+    const { selectedUser, selectedChat, messages } = get();
+    
+    try {
+      let res;
+      if (selectedChat === "group") {
+        // Send group message
+        res = await axiosInstance.post("/messages/group/send", messageData);
+      } else if (selectedUser && selectedUser._id) {
+        // Send direct message
+        res = await axiosInstance.post(
+          `/messages/send/${selectedUser._id}`,
+          messageData
+        );
+      } else {
+        toast.error("No user or chat selected");
+        return;
+      }
+      
       set({ messages: [...messages, res.data] });
     } catch (error) {
       let errorMessage = "Failed to send message";
@@ -270,17 +291,22 @@ export const useChatStore = create((set, get) => ({
     };
 
     socket.off("newMessage"); // prevent duplicates
+    socket.off("newGroupMessage"); // prevent duplicates
+    
+    // Handle direct messages
     socket.on("newMessage", (newMessage) => {
       console.log("📩 Received new message:", newMessage);
 
       const selectedUser = get().selectedUser;
+      const selectedChat = get().selectedChat;
       const messages = get().messages;
       const unreadCounts = get().unreadCounts;
 
-      // Add message to current chat (if same user)
+      // Add message to current chat (if same user and not group chat)
       const alreadyExists = messages.some((msg) => msg._id === newMessage._id);
       if (
         selectedUser &&
+        selectedChat !== "group" &&
         newMessage.senderId === selectedUser._id &&
         !alreadyExists
       ) {
@@ -302,20 +328,51 @@ export const useChatStore = create((set, get) => ({
         newMessage.text || "You received a new message"
       );
     });
+
+    // Handle group messages
+    socket.on("newGroupMessage", (newMessage) => {
+      console.log("📩 Received new group message:", newMessage);
+
+      const selectedChat = get().selectedChat;
+      const messages = get().messages;
+      const authUser = useAuthStore.getState().authUser;
+
+      // Don't add our own messages (they're already added when sending)
+      if (newMessage.senderId._id === authUser._id) return;
+
+      // Add message to current chat if group chat is selected
+      const alreadyExists = messages.some((msg) => msg._id === newMessage._id);
+      if (selectedChat === "group" && !alreadyExists) {
+        set({ messages: [...messages, newMessage] });
+      }
+
+      // Show notification always
+      showNotification(
+        `Group message from ${newMessage.senderId.fullName}`,
+        newMessage.text || "You received a new group message"
+      );
+    });
   },
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     if (socket) {
       socket.off("newMessage");
+      socket.off("newGroupMessage");
     }
   },
 
   setSelectedUser: async (selectedUser) => {
-    set({ selectedUser });
+    set({ selectedUser, selectedChat: null }); // Reset to P2P chat
 
     if (selectedUser?._id) {
       await get().markMessagesAsRead(selectedUser._id);
+    }
+  },
+
+  setSelectedChat: (chatType) => {
+    if (chatType === "group") {
+      set({ selectedUser: null, selectedChat: "group" });
     }
   },
 

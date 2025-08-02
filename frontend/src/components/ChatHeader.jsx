@@ -1,10 +1,18 @@
-import { X } from "lucide-react";
+import { X, Users } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 
 const ChatHeader = () => {
-  const { selectedUser, setSelectedUser } = useChatStore();
+  const { selectedUser, selectedChat, setSelectedUser, setSelectedChat } = useChatStore();
   const { onlineUsers } = useAuthStore();
+
+  const handleClose = () => {
+    if (selectedChat === "group") {
+      setSelectedChat(null);
+    } else {
+      setSelectedUser(null);
+    }
+  };
 
   return (
     <div className="p-2.5 border-b border-base-300">
@@ -13,21 +21,32 @@ const ChatHeader = () => {
           {/* Avatar */}
           <div className="avatar">
             <div className="size-10 rounded-full relative">
-              <img src={selectedUser.profilePic || "/avatar.png"} alt={selectedUser.fullName} />
+              {selectedChat === "group" ? (
+                <div className="size-10 bg-primary rounded-full flex items-center justify-center">
+                  <Users className="size-6 text-primary-content" />
+                </div>
+              ) : (
+                <img src={selectedUser.profilePic || "/avatar.png"} alt={selectedUser.fullName} />
+              )}
             </div>
           </div>
 
-          {/* User info */}
+          {/* Chat info */}
           <div>
-            <h3 className="font-medium">{selectedUser.fullName}</h3>
+            <h3 className="font-medium">
+              {selectedChat === "group" ? "Group Chat" : selectedUser.fullName}
+            </h3>
             <p className="text-sm text-base-content/70">
-              {onlineUsers.includes(selectedUser._id) ? "Online" : "Offline"}
+              {selectedChat === "group" 
+                ? "Chat with all registered users"
+                : (onlineUsers.includes(selectedUser._id) ? "Online" : "Offline")
+              }
             </p>
           </div>
         </div>
 
         {/* Close button */}
-        <button onClick={() => setSelectedUser(null)}>
+        <button onClick={handleClose}>
           <X />
         </button>
       </div>

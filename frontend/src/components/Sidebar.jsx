@@ -99,7 +99,9 @@ const Sidebar = () => {
     getUsers,
     users,
     selectedUser,
+    selectedChat,
     setSelectedUser,
+    setSelectedChat,
     isUsersLoading,
     unreadCounts,
     fetchUnreadCounts,
@@ -147,6 +149,29 @@ const Sidebar = () => {
 
       {/* User List */}
       <div className="overflow-y-auto w-full py-3">
+        {/* Group Chat Option */}
+        <button
+          onClick={() => setSelectedChat("group")}
+          className={`
+            w-full p-3 flex items-center gap-3
+            hover:bg-base-300 transition-colors
+            ${selectedChat === "group" ? "bg-base-300 ring-1 ring-base-300" : ""}
+          `}
+        >
+          <div className="relative mx-auto lg:mx-0">
+            <div className="size-12 bg-primary rounded-full flex items-center justify-center">
+              <Users className="size-6 text-primary-content" />
+            </div>
+          </div>
+          <div className="hidden lg:block text-left min-w-0">
+            <div className="font-medium truncate">Group Chat</div>
+            <div className="text-sm text-zinc-400">Chat with everyone</div>
+          </div>
+        </button>
+
+        {/* Divider */}
+        <div className="border-b border-base-300 my-2 mx-3"></div>
+
         {filteredUsers.map((user) => (
           <button
             key={user._id}
@@ -154,7 +179,7 @@ const Sidebar = () => {
             className={`
               w-full p-3 flex items-center gap-3
               hover:bg-base-300 transition-colors
-              ${selectedUser?._id === user._id ? "bg-base-300 ring-1 ring-base-300" : ""}
+              ${selectedUser?._id === user._id && selectedChat !== "group" ? "bg-base-300 ring-1 ring-base-300" : ""}
             `}
           >
             {/* Avatar with online + unread */}

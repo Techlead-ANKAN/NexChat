@@ -7,7 +7,7 @@ import NoChatSelected from "../components/NoChatSelected";
 import ChatContainer from "../components/ChatContainer";
 
 const HomePage = () => {
-  const { selectedUser, subscribeToMessages, unsubscribeFromMessages, fetchUnreadCounts } = useChatStore();
+  const { selectedUser, selectedChat, subscribeToMessages, unsubscribeFromMessages, fetchUnreadCounts } = useChatStore();
   const { socket } = useAuthStore();
 
   useEffect(() => {
@@ -28,7 +28,7 @@ const HomePage = () => {
         <div className="bg-base-100 rounded-lg shadow-cl w-full max-w-6xl h-[calc(100vh-8rem)]">
           <div className="flex h-full rounded-lg overflow-hidden">
             <Sidebar />
-            {!selectedUser ? <NoChatSelected /> : <ChatContainer />}
+            {!selectedUser && selectedChat !== "group" ? <NoChatSelected /> : <ChatContainer />}
           </div>
         </div>
       </div>
