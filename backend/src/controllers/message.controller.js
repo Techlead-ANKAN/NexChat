@@ -272,3 +272,53 @@ export const getUnreadMessageCounts = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// Group Chat Controllers
+export const getGroupMessages = async (req, res) => {
+  try {
+    const messages = await Message.find({ chatType: "group" })
+      .populate("senderId", "fullName profilePic")
+      .sort({ createdAt: 1 })
+      .limit(100); // Limit to last 100 messages for performance
+
+    res.status(200).json(messages);
+  } catch (error) {
+    console.log("Error in getGroupMessages controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const sendGroupMessage = async (req, res) => {
+  try {
+    const { text, image } = req.body;
+    const senderId = req.user._id;
+
+    let imageUrl;
+    if (image) {
+      const uploadResponse = await cloudinary.uploader.upload(image);
+      imageUrl = uploadResponse.secure_url;
+    }
+
+    const newMessage = new Message({
+      senderId,
+      chatType: "group",
+      text,
+      image: imageUrl,
+      read: false,
+    });
+
+    await newMessage.save();
+
+    // Populate sender info for the response
+    const populatedMessage = await Message.findById(newMessage._id)
+      .populate("senderId", "fullName profilePic");
+
+    // Broadcast to all connected users
+    io.emit("newGroupMessage", populatedMessage);
+
+    res.status(201).json(populatedMessage);
+  } catch (error) {
+    console.log("Error in sendGroupMessage controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
