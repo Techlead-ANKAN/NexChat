@@ -1,0 +1,90 @@
+NexChat - Features Overview
+===========================
+
+USER FEATURES:
+--------------
+
+Authentication:
+• Register new account with email and password
+• Login to existing account
+• Logout securely
+
+Profile Management:
+• Update profile information (name, email)
+• Upload and change profile picture
+• View account details
+
+Messaging:
+• Send and receive private messages in real-time
+• Join community group chat
+• Send messages in group chat in real-time
+• View message history
+• Send images and files
+• See when others are typing
+• View online/offline status of users
+
+Themes:
+• Choose from 4 wildlife themes:
+  - Tiger Stripes (Orange/Black)
+  - Forest Depths (Green)
+  - Arctic Wolf (Blue/Gray)
+  - Golden Savanna (Gold/Brown)
+• Theme preferences are saved
+
+User Interface:
+• Responsive design (works on mobile, tablet, desktop)
+• Search for other users
+• View contact list
+• See unread message counts
+
+ADMIN FEATURES:
+---------------
+
+Admin Access:
+• Login with admin credentials:
+  Email: admin@nexchat.com
+  Password: admin123
+
+Dashboard:
+• View total number of users
+• View total messages sent
+• See platform statistics
+
+User Management:
+• View list of all users
+• Search for specific users
+• View detailed user information including:
+  - Profile details
+  - Account creation date
+  - Total messages sent/received
+  - Account status
+• Block/unblock users
+• Promote users to admin role
+• Filter users by status (active/blocked)
+
+Message Monitoring:
+• Monitor all messages on the platform
+• View group chat messages
+• Delete inappropriate content
+
+System Controls:
+• Manage user accounts
+• Control access to the platform
+• Moderate content and users
+
+TECHNICAL FEATURES:
+------------------
+• Real-time messaging using Socket.IO
+• Secure authentication with JWT
+• Image storage with Cloudinary
+• Responsive web design
+• MongoDB database
+• Node.js backend with Express
+• React frontend
+
+ADMIN LOGIN CREDENTIALS:
+-----------------------
+Email: admin@nexchat.com
+Password: admin123
+
+NOTE: This is a production-ready chat application with admin controls for user management and content moderation.
