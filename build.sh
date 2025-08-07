@@ -1,15 +1,19 @@
 #!/bin/bash
+set -e
+
+echo "🔧 Starting build process..."
+
+# Navigate to frontend-new and build
+echo "📦 Building frontend..."
+cd frontend-new
+npm ci --only=production
+npm run build
+cd ..
 
 # Install backend dependencies
-echo "Installing backend dependencies..."
-npm install --prefix backend
+echo "🔧 Installing backend dependencies..."
+cd backend
+npm ci --only=production
+cd ..
 
-# Install frontend dependencies
-echo "Installing frontend dependencies..."
-npm install --prefix frontend-new
-
-# Build frontend
-echo "Building frontend..."
-npm run build --prefix frontend-new
-
-echo "Build completed successfully!"
+echo "✅ Build completed successfully!"
