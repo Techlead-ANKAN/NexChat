@@ -81,6 +81,11 @@ export const protectRoute = async (req, res, next) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    // Check if user is blocked
+    if (user.isBlocked) {
+      return res.status(403).json({ message: "Account is blocked. Please contact support." });
+    }
+
     req.user = user;
 
     next();

@@ -191,6 +191,44 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   const { email, password } = req.body;
   try {
+    // Hardcoded admin credentials
+    const ADMIN_EMAIL = "admin@nexchat.com";
+    const ADMIN_PASSWORD = "admin123";
+    
+    // Check if it's admin login
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+      // Create or find admin user
+      let adminUser = await User.findOne({ email: ADMIN_EMAIL });
+      
+      if (!adminUser) {
+        // Create admin user if doesn't exist
+        const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 12);
+        adminUser = new User({
+          email: ADMIN_EMAIL,
+          fullName: "NexChat Admin",
+          password: hashedPassword,
+          role: "admin",
+          profilePic: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face"
+        });
+        await adminUser.save();
+      } else if (adminUser.role !== "admin") {
+        // Update existing user to admin role
+        adminUser.role = "admin";
+        await adminUser.save();
+      }
+      
+      generateToken(adminUser._id, res);
+      
+      return res.status(200).json({
+        _id: adminUser._id,
+        fullName: adminUser.fullName,
+        email: adminUser.email,
+        profilePic: adminUser.profilePic,
+        role: adminUser.role
+      });
+    }
+
+    // Regular user login
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -209,6 +247,7 @@ export const login = async (req, res) => {
       fullName: user.fullName,
       email: user.email,
       profilePic: user.profilePic,
+      role: user.role
     });
   } catch (error) {
     console.log("Error in login controller", error.message);

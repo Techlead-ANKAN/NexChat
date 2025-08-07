@@ -42,6 +42,29 @@ const userSchema = new mongoose.Schema(
       type: String, // Specifying the data type as String
       default: "", // Setting a default value of an empty string for profilePic
     },
+
+    role: {
+      type: String, // Specifying the data type as String
+      enum: ["user", "admin"], // Only allow 'user' or 'admin' values
+      default: "user", // Setting default role as 'user'
+      required: true, // Making the role field mandatory
+    },
+
+    isBlocked: {
+      type: Boolean, // Specifying the data type as Boolean
+      default: false, // Setting default blocked status as false
+    },
+
+    blockedAt: {
+      type: Date, // Specifying the data type as Date
+      default: null, // No default date when user is blocked
+    },
+
+    blockedBy: {
+      type: mongoose.Schema.Types.ObjectId, // Reference to admin who blocked the user
+      ref: "User", // Reference to the User model
+      default: null, // No default value
+    },
   },
   { timestamps: true } // Enabling timestamps for createdAt and updatedAt fields
 );

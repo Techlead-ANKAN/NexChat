@@ -55,16 +55,15 @@ export const useChatStore = create((set, get) => ({
   },
 
   sendMessage: async (messageData) => {
-    const { selectedUser, selectedChat, messages } = get();
+    const { selectedUser, selectedChat } = get();
     
     try {
-      let res;
       if (selectedChat === "group") {
-        res = await axiosInstance.post("/messages/group/send", messageData);
+        await axiosInstance.post("/messages/group/send", messageData);
       } else {
-        res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
+        await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
       }
-      set({ messages: [...messages, res.data] });
+      // Don't manually add to messages array - let socket listener handle it
     } catch (error) {
       toast.error(error.response.data.message);
     }
@@ -85,6 +84,7 @@ export const useChatStore = create((set, get) => ({
 
     const socket = useAuthStore.getState().socket;
 
+    // Listen for regular private messages
     socket.on("newMessage", (newMessage) => {
       const isMessageFromSelectedChat = 
         (selectedChat === "group" && newMessage.isGroupMessage) ||
@@ -99,11 +99,24 @@ export const useChatStore = create((set, get) => ({
         get().fetchUnreadCounts();
       }
     });
+
+    // Listen for group messages
+    socket.on("newGroupMessage", (newGroupMessage) => {
+      if (selectedChat === "group") {
+        set({
+          messages: [...get().messages, newGroupMessage],
+        });
+      } else {
+        // Update unread counts for group chat
+        get().fetchUnreadCounts();
+      }
+    });
   },
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     socket?.off("newMessage");
+    socket?.off("newGroupMessage");
   },
 
   setSelectedUser: (selectedUser) => {

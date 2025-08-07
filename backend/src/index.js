@@ -102,6 +102,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes.js";
 import messageRoutes from "./routes/message.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
 import { connectDB } from "./lib/db.js";
 import cors from "cors";
 import { app, server } from "./lib/socket.js";
@@ -131,6 +132,7 @@ app.use(cors(corsOptions));
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Serve static files in production
 if (process.env.NODE_ENV === "production") {

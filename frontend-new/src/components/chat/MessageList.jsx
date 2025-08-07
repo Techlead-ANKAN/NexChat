@@ -32,10 +32,16 @@ const MessageList = ({ messages, authUser, messageEndRef }) => {
   return (
     <div className="flex-1 overflow-y-auto scrollbar-thin p-6 space-y-4" style={{ paddingBottom: '2rem' }}>
       {messages.map((message, index) => {
+        // Safety check for senderId
+        if (!message.senderId) {
+          console.warn('Message with missing senderId:', message);
+          return null;
+        }
+        
         const isFromMe = (selectedChat === "group" ? message.senderId._id : message.senderId) === authUser._id;
         const showAvatar = index === 0 || 
           (selectedChat === "group" 
-            ? messages[index - 1]?.senderId._id !== message.senderId._id
+            ? messages[index - 1]?.senderId?._id !== message.senderId._id
             : (messages[index - 1]?.senderId !== message.senderId)
           );
 
@@ -54,7 +60,7 @@ const MessageList = ({ messages, authUser, messageEndRef }) => {
                 <img
                   src={
                     selectedChat === "group"
-                      ? message.senderId.profilePic || `https://api.dicebear.com/7.x/initials/svg?seed=${message.senderId.fullName}`
+                      ? message.senderId?.profilePic || `https://api.dicebear.com/7.x/initials/svg?seed=${message.senderId?.fullName || 'Unknown'}`
                       : selectedUser.profilePic || `https://api.dicebear.com/7.x/initials/svg?seed=${selectedUser.fullName}`
                   }
                   alt="Profile"
@@ -71,7 +77,7 @@ const MessageList = ({ messages, authUser, messageEndRef }) => {
                 <div className="text-xs mb-1 ml-3 flex items-center gap-1"
                      style={{ color: 'hsl(var(--muted-foreground))' }}>
                   <Camera className="w-3 h-3" />
-                  <span>{message.senderId.fullName}</span>
+                  <span>{message.senderId?.fullName || 'Unknown User'}</span>
                 </div>
               )}
 

@@ -14,6 +14,7 @@ import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
@@ -58,6 +59,10 @@ function App() {
             <Route 
               path="/settings" 
               element={authUser ? <SettingsPage /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/admin" 
+              element={authUser && authUser.role === "admin" ? <AdminDashboard /> : <Navigate to="/" />} 
             />
           </Routes>
         </main>

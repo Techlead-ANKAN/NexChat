@@ -12,7 +12,8 @@ import {
   LogOut, 
   Menu, 
   X,
-  Binoculars
+  Binoculars,
+  Shield
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -24,6 +25,11 @@ const Navbar = () => {
   const navigation = [
     { name: "Chat", href: "/", icon: MessageCircle },
   ];
+
+  // Add admin navigation if user is admin
+  if (authUser && authUser.role === "admin") {
+    navigation.push({ name: "Admin", href: "/admin", icon: Shield });
+  }
 
   const isActive = (path) => location.pathname === path;
 
