@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import logoImage from "@/assets/WBN Logo 2.jpg";
 
 const ChatSidebar = () => {
   const { 
@@ -114,8 +115,12 @@ const ChatSidebar = () => {
           )}
         >
           <div className="relative mx-auto lg:mx-0">
-            <div className="w-12 h-12 bg-gradient-to-r from-nature-500 to-gold-500 rounded-xl flex items-center justify-center shadow-lg">
-              <Users className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg ring-2 ring-nature-500/30">
+              <img 
+                src={logoImage} 
+                alt="Wild By Nature Community" 
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
           <div className="hidden lg:block text-left min-w-0 flex-1">

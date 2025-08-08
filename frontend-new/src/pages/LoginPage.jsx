@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Camera, TreePine, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import logoImage from "@/assets/WBN Logo 2.jpg";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -52,9 +53,13 @@ const LoginPage = () => {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
-                className="mx-auto w-16 h-16 bg-gradient-to-r from-nature-500 to-gold-500 rounded-2xl flex items-center justify-center shadow-lg"
+                className="mx-auto w-16 h-16 rounded-2xl overflow-hidden shadow-lg ring-2 ring-nature-500/30"
               >
-                <Camera className="w-8 h-8 text-white" />
+                <img 
+                  src={logoImage} 
+                  alt="Wild By Nature Logo" 
+                  className="w-full h-full object-cover"
+                />
               </motion.div>
               
               <div>

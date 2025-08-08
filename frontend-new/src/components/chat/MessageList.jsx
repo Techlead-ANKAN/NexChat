@@ -2,6 +2,7 @@ import { useChatStore } from "@/store/useChatStore";
 import { formatMessageTime } from "@/lib/utils";
 import { Camera, TreePine } from "lucide-react";
 import { motion } from "framer-motion";
+import logoImage from "@/assets/WBN Logo 2.jpg";
 
 const MessageList = ({ messages, authUser, messageEndRef }) => {
   const { selectedUser, selectedChat } = useChatStore();
@@ -9,9 +10,13 @@ const MessageList = ({ messages, authUser, messageEndRef }) => {
   if (messages.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8" style={{ color: 'hsl(var(--muted-foreground))' }}>
-        <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" 
+        <div className="w-16 h-16 rounded-full overflow-hidden mb-4 ring-2 ring-[hsl(var(--primary))] ring-opacity-20" 
              style={{ background: 'hsl(var(--muted) / 0.3)' }}>
-          <TreePine className="w-8 h-8" />
+          <img 
+            src={logoImage} 
+            alt="Wild By Nature Logo" 
+            className="w-full h-full object-cover"
+          />
         </div>
         <p className="text-center text-lg font-medium mb-2">
           {selectedChat === "group" 

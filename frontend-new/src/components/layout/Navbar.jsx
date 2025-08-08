@@ -16,6 +16,7 @@ import {
   Shield
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import logoImage from "@/assets/WBN Logo 2.jpg";
 
 const Navbar = () => {
   const { authUser, logout } = useAuthStore();
@@ -40,11 +41,12 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-                <Binoculars className="w-6 h-6 text-white" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-[hsl(var(--primary))] rounded-full flex items-center justify-center">
-                <TreePine className="w-2 h-2 text-white" />
+              <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-300 ring-2 ring-[hsl(var(--primary))] ring-opacity-20">
+                <img 
+                  src={logoImage} 
+                  alt="Wild By Nature Logo" 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                />
               </div>
             </div>
             <div className="hidden sm:block">

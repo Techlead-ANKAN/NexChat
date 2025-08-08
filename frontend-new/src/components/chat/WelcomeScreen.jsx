@@ -1,5 +1,6 @@
 import { Camera, TreePine, Users, MessageCircle, Mountain, Binoculars } from "lucide-react";
 import { motion } from "framer-motion";
+import logoImage from "@/assets/WBN Logo 2.jpg";
 
 const WelcomeScreen = () => {
   const features = [
@@ -45,15 +46,19 @@ const WelcomeScreen = () => {
         transition={{ duration: 0.6 }}
         className="relative z-10 max-w-md mx-auto text-center"
       >
-        {/* Icon */}
+        {/* Logo */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
           className="mb-8 relative"
         >
-          <div className="w-24 h-24 mx-auto bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--accent))] to-[hsl(var(--primary))] rounded-2xl flex items-center justify-center shadow-2xl animate-float">
-            <MessageCircle className="w-12 h-12 text-white" />
+          <div className="w-24 h-24 mx-auto rounded-2xl overflow-hidden shadow-2xl animate-float ring-4 ring-[hsl(var(--primary))] ring-opacity-30">
+            <img 
+              src={logoImage} 
+              alt="Wild By Nature Logo" 
+              className="w-full h-full object-cover"
+            />
           </div>
           <div className="absolute -top-2 -right-2 w-8 h-8 bg-[hsl(var(--accent))] rounded-full flex items-center justify-center animate-pulse">
             <Camera className="w-4 h-4 text-white" />
