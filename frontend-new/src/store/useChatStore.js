@@ -12,6 +12,18 @@ export const useChatStore = create((set, get) => ({
   isMessagesLoading: false,
   unreadCounts: {},
 
+  // Helper function to remove duplicate messages
+  removeDuplicateMessages: (messages) => {
+    const seen = new Set();
+    return messages.filter(message => {
+      if (seen.has(message._id)) {
+        return false;
+      }
+      seen.add(message._id);
+      return true;
+    });
+  },
+
   getUsers: async () => {
     set({ isUsersLoading: true });
     try {
@@ -28,7 +40,9 @@ export const useChatStore = create((set, get) => ({
     set({ isMessagesLoading: true });
     try {
       const res = await axiosInstance.get(`/messages/${userId}`);
-      set({ messages: res.data });
+      // Remove duplicates when setting initial messages
+      const uniqueMessages = get().removeDuplicateMessages(res.data);
+      set({ messages: uniqueMessages });
       
       // Mark messages as read
       await axiosInstance.post("/messages/mark-read", { senderId: userId });
@@ -46,7 +60,9 @@ export const useChatStore = create((set, get) => ({
     set({ isMessagesLoading: true });
     try {
       const res = await axiosInstance.get("/messages/group/messages");
-      set({ messages: res.data });
+      // Remove duplicates when setting initial messages
+      const uniqueMessages = get().removeDuplicateMessages(res.data);
+      set({ messages: uniqueMessages });
     } catch (error) {
       toast.error(error.response.data.message);
     } finally {
@@ -59,8 +75,12 @@ export const useChatStore = create((set, get) => ({
     
     try {
       if (selectedChat === "group") {
+        // For group messages, just send to server - don't add locally
+        // The socket listener will handle adding the message
         await axiosInstance.post("/messages/group/send", messageData);
       } else {
+        // For private messages, just send to server - don't add locally
+        // The socket listener will handle adding the message
         await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
       }
       // Don't manually add to messages array - let socket listener handle it
@@ -79,22 +99,37 @@ export const useChatStore = create((set, get) => ({
   },
 
   subscribeToMessages: () => {
-    const { selectedUser, selectedChat } = get();
-    if (!selectedUser && selectedChat !== "group") return;
-
     const socket = useAuthStore.getState().socket;
+    if (!socket) return;
+
+    // First unsubscribe to prevent duplicate listeners
+    get().unsubscribeFromMessages();
 
     // Listen for regular private messages
     socket.on("newMessage", (newMessage) => {
-      const isMessageFromSelectedChat = 
-        (selectedChat === "group" && newMessage.isGroupMessage) ||
-        (selectedUser && (newMessage.senderId === selectedUser._id || newMessage.receiverId === selectedUser._id));
+      const { selectedUser, selectedChat } = get();
+      const { authUser } = useAuthStore.getState();
+      
+      // Check if message is relevant to current selection
+      const isPrivateMessage = !newMessage.chatType || newMessage.chatType !== "group";
+      
+      // Check if this message belongs to the current private chat
+      const isRelevantToCurrentChat = selectedUser && !selectedChat && (
+        // Message from selected user to me
+        ((newMessage.senderId?._id || newMessage.senderId) === selectedUser._id && 
+         (newMessage.receiverId?._id || newMessage.receiverId) === authUser._id) ||
+        // Message from me to selected user
+        ((newMessage.senderId?._id || newMessage.senderId) === authUser._id && 
+         (newMessage.receiverId?._id || newMessage.receiverId) === selectedUser._id)
+      );
 
-      if (isMessageFromSelectedChat) {
-        set({
-          messages: [...get().messages, newMessage],
+      if (isPrivateMessage && isRelevantToCurrentChat) {
+        set(state => {
+          // Add the new message and remove any duplicates
+          const updatedMessages = get().removeDuplicateMessages([...state.messages, newMessage]);
+          return { messages: updatedMessages };
         });
-      } else {
+      } else if (isPrivateMessage && !isRelevantToCurrentChat) {
         // Update unread counts for other chats
         get().fetchUnreadCounts();
       }
@@ -102,12 +137,16 @@ export const useChatStore = create((set, get) => ({
 
     // Listen for group messages
     socket.on("newGroupMessage", (newGroupMessage) => {
+      const { selectedChat } = get();
+      
       if (selectedChat === "group") {
-        set({
-          messages: [...get().messages, newGroupMessage],
+        set(state => {
+          // Add the new message and remove any duplicates
+          const updatedMessages = get().removeDuplicateMessages([...state.messages, newGroupMessage]);
+          return { messages: updatedMessages };
         });
       } else {
-        // Update unread counts for group chat
+        // Update unread counts for group chat when not viewing it
         get().fetchUnreadCounts();
       }
     });

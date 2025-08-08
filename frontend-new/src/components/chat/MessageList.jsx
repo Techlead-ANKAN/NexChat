@@ -33,12 +33,14 @@ const MessageList = ({ messages, authUser, messageEndRef }) => {
     <div className="flex-1 overflow-y-auto scrollbar-thin p-6 space-y-4" style={{ paddingBottom: '2rem' }}>
       {messages.map((message, index) => {
         // Safety check for senderId
-        if (!message.senderId) {
-          console.warn('Message with missing senderId:', message);
+        if (!message.senderId || !message._id) {
+          console.warn('Message with missing senderId or _id:', message);
           return null;
         }
         
-        const isFromMe = (selectedChat === "group" ? message.senderId._id : message.senderId) === authUser._id;
+        const isFromMe = selectedChat === "group" 
+          ? (message.senderId?._id || message.senderId) === authUser._id
+          : (message.senderId?._id || message.senderId) === authUser._id;
         const showAvatar = index === 0 || 
           (selectedChat === "group" 
             ? messages[index - 1]?.senderId?._id !== message.senderId._id

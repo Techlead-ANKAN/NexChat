@@ -14,30 +14,27 @@ const ChatContainer = () => {
     isMessagesLoading,
     selectedUser,
     selectedChat,
-    subscribeToMessages,
-    unsubscribeFromMessages,
   } = useChatStore();
 
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
 
   useEffect(() => {
-    if (selectedChat === "group") {
-      getGroupMessages();
-    } else if (selectedUser) {
-      getMessages(selectedUser._id);
-    }
+    // Load messages when selection changes
+    const loadMessages = async () => {
+      if (selectedChat === "group") {
+        await getGroupMessages();
+      } else if (selectedUser) {
+        await getMessages(selectedUser._id);
+      }
+    };
 
-    subscribeToMessages();
-
-    return () => unsubscribeFromMessages();
+    loadMessages();
   }, [
     selectedUser,
     selectedChat,
     getMessages,
     getGroupMessages,
-    subscribeToMessages,
-    unsubscribeFromMessages,
   ]);
 
   useEffect(() => {

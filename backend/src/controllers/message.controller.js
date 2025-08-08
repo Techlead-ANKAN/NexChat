@@ -187,7 +187,9 @@ export const getMessages = async (req, res) => {
         { senderId: myId, receiverId: userToChatId },
         { senderId: userToChatId, receiverId: myId },
       ],
-    });
+    })
+    .populate("senderId", "fullName profilePic")
+    .populate("receiverId", "fullName profilePic");
 
     res.status(200).json(messages);
   } catch (error) {
@@ -213,17 +215,29 @@ export const sendMessage = async (req, res) => {
       receiverId,
       text,
       image: imageUrl,
-      read: false, // 👈 Mark message as unread initially
+      read: false,
     });
 
     await newMessage.save();
 
+    // Populate sender information
+    const populatedMessage = await Message.findById(newMessage._id)
+      .populate("senderId", "fullName profilePic")
+      .populate("receiverId", "fullName profilePic");
+
+    // Send to receiver
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", newMessage);
+      io.to(receiverSocketId).emit("newMessage", populatedMessage);
     }
 
-    res.status(201).json(newMessage);
+    // Send back to sender to show their own message immediately
+    const senderSocketId = getReceiverSocketId(senderId);
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("newMessage", populatedMessage);
+    }
+
+    res.status(201).json(populatedMessage);
   } catch (error) {
     console.log("Error in sendMessage controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });
@@ -313,7 +327,7 @@ export const sendGroupMessage = async (req, res) => {
     const populatedMessage = await Message.findById(newMessage._id)
       .populate("senderId", "fullName profilePic");
 
-    // Broadcast to all connected users
+    // Broadcast to ALL users (this is correct for group chat)
     io.emit("newGroupMessage", populatedMessage);
 
     res.status(201).json(populatedMessage);
