@@ -24,6 +24,10 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Don't log 401 errors for auth check - they're expected when not logged in
+    if (error.response?.status === 401 && error.config?.url?.includes('/auth/check')) {
+      return Promise.reject(error);
+    }
     console.error("❌ Response error:", error.response?.data || error.message);
     return Promise.reject(error);
   }
