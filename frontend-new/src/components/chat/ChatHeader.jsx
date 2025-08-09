@@ -1,5 +1,6 @@
 import { useChatStore } from "@/store/useChatStore";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useResponsive } from "@/hooks/useResponsive";
 import { Button } from "@/components/ui/Button";
 import { 
   X, 
@@ -10,19 +11,31 @@ import {
   Video, 
   Phone,
   MoreVertical,
-  Binoculars
+  Binoculars,
+  ArrowLeft
 } from "lucide-react";
 import logoImage from "@/assets/WBN Logo 2.jpg";
 
 const ChatHeader = () => {
   const { selectedUser, selectedChat, setSelectedUser, setSelectedChat } = useChatStore();
   const { onlineUsers } = useAuthStore();
+  const { isMobile } = useResponsive();
 
   const handleClose = () => {
     if (selectedChat === "group") {
       setSelectedChat(null);
     } else {
       setSelectedUser(null);
+    }
+  };
+
+  const handleBackClick = () => {
+    if (isMobile) {
+      if (selectedChat === "group") {
+        setSelectedChat(null);
+      } else {
+        setSelectedUser(null);
+      }
     }
   };
 
@@ -33,6 +46,18 @@ const ChatHeader = () => {
     <div className="bg-wild-950/50 backdrop-blur-sm border-b border-wild-800/30 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
+          {/* Back Button for Mobile */}
+          {isMobile && (
+            <Button
+              onClick={handleBackClick}
+              variant="ghost"
+              size="sm"
+              className="p-2 text-wild-300 hover:text-white hover:bg-wild-800/30"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          )}
+          
           {/* Avatar */}
           <div className="relative">
             {isGroupChat ? (

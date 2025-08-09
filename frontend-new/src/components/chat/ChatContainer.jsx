@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useChatStore } from "@/store/useChatStore";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useResponsive } from "@/hooks/useResponsive";
 import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
 import MessageList from "./MessageList";
@@ -17,6 +18,7 @@ const ChatContainer = () => {
   } = useChatStore();
 
   const { authUser } = useAuthStore();
+  const { isMobile } = useResponsive();
   const messageEndRef = useRef(null);
 
   useEffect(() => {
@@ -52,7 +54,7 @@ const ChatContainer = () => {
 
   if (isMessagesLoading) {
     return (
-      <div className="flex-1 flex flex-col">
+      <div className={`flex-1 flex flex-col ${isMobile ? 'w-full' : ''}`}>
         <ChatHeader />
         <div className="flex-1 flex items-center justify-center">
           <LoadingSpinner size="lg" />
@@ -63,7 +65,7 @@ const ChatContainer = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full chat-container">
+    <div className={`flex-1 flex flex-col h-full chat-container ${isMobile ? 'w-full' : ''}`}>
       <ChatHeader />
       
       <div className="flex-1 overflow-hidden relative">

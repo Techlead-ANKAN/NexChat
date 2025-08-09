@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useChatStore } from "@/store/useChatStore";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useResponsive } from "@/hooks/useResponsive";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -31,6 +32,7 @@ const ChatSidebar = () => {
   } = useChatStore();
 
   const { onlineUsers } = useAuthStore();
+  const { isMobile } = useResponsive();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -47,28 +49,34 @@ const ChatSidebar = () => {
 
   if (isUsersLoading) {
     return (
-      <div className="w-20 lg:w-80 sidebar flex items-center justify-center">
+      <div className={cn(
+        "sidebar flex items-center justify-center",
+        isMobile ? "w-full" : "w-20 lg:w-80"
+      )}>
         <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="w-20 lg:w-80 sidebar flex flex-col">
+    <div className={cn(
+      "sidebar flex flex-col",
+      isMobile ? "w-full" : "w-20 lg:w-80"
+    )}>
       {/* Header */}
       <div className="p-4 border-b border-[hsl(var(--border))]">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] rounded-xl flex items-center justify-center">
             <Camera className="w-5 h-5 text-white" />
           </div>
-          <div className="hidden lg:block">
+          <div className={cn("block", !isMobile && "hidden lg:block")}>
             <h3 className="font-display font-semibold" style={{ color: 'hsl(var(--foreground))' }}>Wildlife Community</h3>
             <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>Connect with photographers</p>
           </div>
         </div>
 
         {/* Search */}
-        <div className="hidden lg:block relative mb-4">
+        <div className={cn("relative mb-4", !isMobile && "hidden lg:block")}>
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4" style={{ color: 'hsl(var(--muted-foreground))' }} />
           <Input
             placeholder="Search photographers..."
@@ -79,7 +87,7 @@ const ChatSidebar = () => {
         </div>
 
         {/* Filter */}
-        <div className="hidden lg:flex items-center justify-between">
+        <div className={cn("items-center justify-between", isMobile ? "flex" : "hidden lg:flex")}>
           <label className="flex items-center space-x-2 cursor-pointer">
             <input
               type="checkbox"
@@ -123,7 +131,7 @@ const ChatSidebar = () => {
               />
             </div>
           </div>
-          <div className="hidden lg:block text-left min-w-0 flex-1">
+          <div className={cn("text-left min-w-0 flex-1", !isMobile && "hidden lg:block")}>
             <div className="font-semibold text-white font-display">Community Chat</div>
             <div className="text-sm text-muted-foreground">Connect with everyone</div>
           </div>
@@ -178,7 +186,7 @@ const ChatSidebar = () => {
                 </div>
 
                 {/* User Info - Desktop */}
-                <div className="hidden lg:block text-left min-w-0 flex-1">
+                <div className={cn("text-left min-w-0 flex-1", !isMobile && "hidden lg:block")}>
                   <div className="font-medium text-white truncate flex items-center gap-2">
                     {user.fullName}
                     {isOnline && <Mountain className="w-3 h-3 text-nature-400" />}
@@ -215,8 +223,8 @@ const ChatSidebar = () => {
       </div>
 
       {/* Footer */}
-      <div className="p-3 border-t border-wild-800/30 bg-wild-950/30">
-        <div className="hidden lg:flex items-center justify-center gap-2 text-muted-foreground text-xs">
+      <div className={cn("p-3 border-t border-wild-800/30 bg-wild-950/30", !isMobile && "hidden lg:block")}>
+        <div className="flex items-center justify-center gap-2 text-muted-foreground text-xs">
           <TreePine className="w-3 h-3" />
           <span>Wild By Nature Chat</span>
         </div>
