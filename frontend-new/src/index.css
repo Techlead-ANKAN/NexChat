@@ -80,24 +80,71 @@ html, body, #root {
   color: hsl(var(--foreground));
 }
 
-/* Chat bubbles */
-.chat-bubble {
-  max-width: 24rem;
-  padding: 1rem;
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
+/* Chat bubbles - Theme-aware WhatsApp style */
 .chat-bubble-sent {
   background: hsl(var(--primary));
-  color: hsl(var(--background));
-  margin-left: auto;
+  color: hsl(var(--primary-foreground));
+  border-radius: 18px 18px 4px 18px;
+  max-width: 280px;
+  word-wrap: break-word;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  position: relative;
 }
 
 .chat-bubble-received {
-  background: hsl(var(--muted));
-  color: hsl(var(--foreground));
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border-radius: 18px 18px 18px 4px;
+  max-width: 280px;
+  word-wrap: break-word;
+  box-shadow: 0 1px 2px hsl(var(--border) / 0.3);
   border: 1px solid hsl(var(--border));
+  position: relative;
+}
+
+/* Theme-specific chat bubble styling */
+.theme-tiger-stripes .chat-bubble-sent {
+  background: hsl(24 88% 58%);
+  color: hsl(30 15% 6%);
+}
+
+.theme-tiger-stripes .chat-bubble-received {
+  background: hsl(30 10% 15%);
+  color: hsl(0 0% 95%);
+  border: 1px solid hsl(30 10% 25%);
+}
+
+.theme-forest-depths .chat-bubble-sent {
+  background: hsl(152 65% 35%);
+  color: hsl(0 0% 95%);
+}
+
+.theme-forest-depths .chat-bubble-received {
+  background: hsl(155 15% 15%);
+  color: hsl(0 0% 95%);
+  border: 1px solid hsl(155 15% 25%);
+}
+
+.theme-arctic-wolf .chat-bubble-sent {
+  background: hsl(205 65% 45%);
+  color: hsl(0 0% 95%);
+}
+
+.theme-arctic-wolf .chat-bubble-received {
+  background: hsl(210 10% 15%);
+  color: hsl(0 0% 95%);
+  border: 1px solid hsl(210 10% 25%);
+}
+
+.theme-golden-savanna .chat-bubble-sent {
+  background: hsl(35 55% 55%);
+  color: hsl(30 20% 8%);
+}
+
+.theme-golden-savanna .chat-bubble-received {
+  background: hsl(30 15% 15%);
+  color: hsl(0 0% 95%);
+  border: 1px solid hsl(30 15% 25%);
 }
 
 /* Scrollbar styling */

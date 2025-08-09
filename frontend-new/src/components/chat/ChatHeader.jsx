@@ -8,9 +8,6 @@ import {
   Camera, 
   TreePine, 
   Mountain, 
-  Video, 
-  Phone,
-  MoreVertical,
   Binoculars,
   ArrowLeft
 } from "lucide-react";
@@ -119,20 +116,6 @@ const ChatHeader = () => {
 
         {/* Action buttons */}
         <div className="flex items-center gap-2">
-          {!isGroupChat && (
-            <>
-              {/* Video call button */}
-              <Button variant="ghost" size="icon" className="hidden sm:flex">
-                <Video className="w-4 h-4" />
-              </Button>
-
-              {/* Voice call button */}
-              <Button variant="ghost" size="icon" className="hidden sm:flex">
-                <Phone className="w-4 h-4" />
-              </Button>
-            </>
-          )}
-
           {isGroupChat && (
             <div className="hidden sm:flex items-center gap-3 text-muted-foreground text-sm">
               <div className="flex items-center gap-1">
@@ -141,11 +124,6 @@ const ChatHeader = () => {
               </div>
             </div>
           )}
-
-          {/* More options */}
-          <Button variant="ghost" size="icon" className="hidden sm:flex">
-            <MoreVertical className="w-4 h-4" />
-          </Button>
 
           {/* Close button */}
           <Button variant="ghost" size="icon" onClick={handleClose}>
