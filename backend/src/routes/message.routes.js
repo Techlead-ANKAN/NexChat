@@ -35,6 +35,8 @@ import {
   getUnreadMessageCounts,
   getGroupMessages,
   sendGroupMessage,
+  markMessageAsDelivered,
+  markGroupMessageAsSeen,
 } from "../controllers/message.controller.js";
 
 const router = express.Router();
@@ -43,6 +45,10 @@ const router = express.Router();
 router.get("/users", protectRoute, getUsersForSidebar);
 router.get("/unread-counts", protectRoute, getUnreadMessageCounts);
 router.post("/mark-read", protectRoute, markMessagesAsRead);
+
+// Message status routes
+router.put("/delivered/:messageId", protectRoute, markMessageAsDelivered);
+router.put("/group/seen/:messageId", protectRoute, markGroupMessageAsSeen);
 
 // Group chat routes
 router.get("/group/messages", protectRoute, getGroupMessages);

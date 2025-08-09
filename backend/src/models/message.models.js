@@ -53,6 +53,25 @@ const messageSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    delivered: {
+      // Field to track if message was delivered to recipient
+      type: Boolean,
+      default: false,
+    },
+    seenBy: {
+      // Array of user IDs who have seen this message (for group chats)
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "User",
+      default: [],
+    },
+    readAt: {
+      // Timestamp when message was read
+      type: Date,
+    },
+    deliveredAt: {
+      // Timestamp when message was delivered
+      type: Date,
+    },
   },
   { timestamps: true } // Enabling timestamps for createdAt and updatedAt fields
 );

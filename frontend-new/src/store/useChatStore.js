@@ -63,6 +63,22 @@ export const useChatStore = create((set, get) => ({
       // Remove duplicates when setting initial messages
       const uniqueMessages = get().removeDuplicateMessages(res.data);
       set({ messages: uniqueMessages });
+      
+      // Mark group messages as seen
+      const authUser = useAuthStore.getState().authUser;
+      const unseenMessages = uniqueMessages.filter(msg => 
+        msg.senderId._id !== authUser._id && 
+        (!msg.seenBy || !msg.seenBy.includes(authUser._id))
+      );
+      
+      // Mark each unseen message as seen
+      for (const message of unseenMessages) {
+        try {
+          await axiosInstance.put(`/messages/group/seen/${message._id}`);
+        } catch (error) {
+          console.log("Error marking group message as seen:", error);
+        }
+      }
     } catch (error) {
       toast.error(error.response.data.message);
     } finally {
@@ -150,12 +166,51 @@ export const useChatStore = create((set, get) => ({
         get().fetchUnreadCounts();
       }
     });
+
+    // Listen for message delivery status
+    socket.on("messageDelivered", (data) => {
+      set(state => ({
+        messages: state.messages.map(msg => 
+          msg._id === data.messageId 
+            ? { ...msg, delivered: data.delivered, deliveredAt: data.deliveredAt }
+            : msg
+        )
+      }));
+    });
+
+    // Listen for message read status
+    socket.on("messagesRead", (data) => {
+      set(state => ({
+        messages: state.messages.map(msg => 
+          msg.senderId === data.senderId && msg.receiverId === data.readBy
+            ? { ...msg, read: true, readAt: data.readAt }
+            : msg
+        )
+      }));
+    });
+
+    // Listen for group message seen status
+    socket.on("groupMessageSeen", (data) => {
+      set(state => ({
+        messages: state.messages.map(msg => 
+          msg._id === data.messageId 
+            ? { 
+                ...msg, 
+                seenBy: msg.seenBy ? [...msg.seenBy, data.seenBy] : [data.seenBy]
+              }
+            : msg
+        )
+      }));
+    });
   },
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     socket?.off("newMessage");
     socket?.off("newGroupMessage");
+    socket?.off("messageDelivered");
+    socket?.off("messagesRead");
+    socket?.off("groupMessageSeen");
   },
 
   setSelectedUser: (selectedUser) => {

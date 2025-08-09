@@ -216,6 +216,7 @@ export const sendMessage = async (req, res) => {
       text,
       image: imageUrl,
       read: false,
+      delivered: false, // Initially not delivered
     });
 
     await newMessage.save();
@@ -228,7 +229,25 @@ export const sendMessage = async (req, res) => {
     // Send to receiver
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
+      // Mark as delivered since receiver is online
+      await Message.findByIdAndUpdate(newMessage._id, { 
+        delivered: true, 
+        deliveredAt: new Date() 
+      });
+      populatedMessage.delivered = true;
+      populatedMessage.deliveredAt = new Date();
+      
       io.to(receiverSocketId).emit("newMessage", populatedMessage);
+      
+      // Notify sender about delivery status
+      const senderSocketId = getReceiverSocketId(senderId);
+      if (senderSocketId) {
+        io.to(senderSocketId).emit("messageDelivered", { 
+          messageId: newMessage._id, 
+          delivered: true,
+          deliveredAt: new Date()
+        });
+      }
     }
 
     // Send back to sender to show their own message immediately
@@ -249,10 +268,24 @@ export const markMessagesAsRead = async (req, res) => {
     const senderId = req.body.senderId;
     const receiverId = req.user._id;
 
-    await Message.updateMany(
+    const readAt = new Date();
+
+    const updatedMessages = await Message.updateMany(
       { senderId, receiverId, read: false },
-      { $set: { read: true } }
+      { $set: { read: true, readAt } }
     );
+
+    // Notify sender that messages have been read
+    if (updatedMessages.modifiedCount > 0) {
+      const senderSocketId = getReceiverSocketId(senderId);
+      if (senderSocketId) {
+        io.to(senderSocketId).emit("messagesRead", { 
+          readBy: receiverId, 
+          senderId,
+          readAt 
+        });
+      }
+    }
 
     res.status(200).json({ message: "Messages marked as read" });
   } catch (error) {
@@ -333,6 +366,72 @@ export const sendGroupMessage = async (req, res) => {
     res.status(201).json(populatedMessage);
   } catch (error) {
     console.log("Error in sendGroupMessage controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Message Status Controllers
+export const markMessageAsDelivered = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const deliveredAt = new Date();
+
+    const message = await Message.findByIdAndUpdate(
+      messageId,
+      { delivered: true, deliveredAt },
+      { new: true }
+    ).populate("senderId", "fullName");
+
+    if (!message) {
+      return res.status(404).json({ error: "Message not found" });
+    }
+
+    // Notify sender about delivery
+    const senderSocketId = getReceiverSocketId(message.senderId._id);
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("messageDelivered", {
+        messageId,
+        delivered: true,
+        deliveredAt
+      });
+    }
+
+    res.status(200).json({ message: "Message marked as delivered" });
+  } catch (error) {
+    console.log("Error in markMessageAsDelivered controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const markGroupMessageAsSeen = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user._id;
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ error: "Message not found" });
+    }
+
+    // Add user to seenBy array if not already present
+    if (!message.seenBy.includes(userId)) {
+      message.seenBy.push(userId);
+      await message.save();
+
+      // Notify sender about the new view
+      const senderSocketId = getReceiverSocketId(message.senderId);
+      if (senderSocketId) {
+        io.to(senderSocketId).emit("groupMessageSeen", {
+          messageId,
+          seenBy: userId,
+          seenAt: new Date()
+        });
+      }
+    }
+
+    res.status(200).json({ message: "Message marked as seen" });
+  } catch (error) {
+    console.log("Error in markGroupMessageAsSeen controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };

@@ -1,6 +1,7 @@
 import { useChatStore } from "@/store/useChatStore";
 import { formatMessageTime } from "@/lib/utils";
 import { motion } from "framer-motion";
+import MessageStatus from "./MessageStatus";
 import logoImage from "@/assets/WBN Logo 2.jpg";
 
 const MessageList = ({ messages, authUser, messageEndRef }) => {
@@ -107,8 +108,9 @@ const MessageList = ({ messages, authUser, messageEndRef }) => {
                 )}
 
                 {/* Message Time */}
-                <div className={`text-xs text-right opacity-70 ${isFromMe ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
-                  {formatMessageTime(message.createdAt)}
+                <div className={`text-xs text-right opacity-70 ${isFromMe ? 'text-primary-foreground' : 'text-muted-foreground'} flex items-center justify-end gap-1`}>
+                  <span>{formatMessageTime(message.createdAt)}</span>
+                  <MessageStatus message={message} isFromMe={isFromMe} />
                 </div>
               </div>
             </div>
