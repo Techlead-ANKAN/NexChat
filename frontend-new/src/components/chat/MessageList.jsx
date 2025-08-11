@@ -9,8 +9,8 @@ const MessageList = ({ messages, authUser, messageEndRef }) => {
 
   if (messages.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8" style={{ color: 'hsl(var(--muted-foreground))' }}>
-        <div className="w-16 h-16 rounded-full overflow-hidden mb-4 ring-2 ring-[hsl(var(--primary))] ring-opacity-20" 
+      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8" style={{ color: 'hsl(var(--muted-foreground))' }}>
+        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden mb-4 ring-2 ring-[hsl(var(--primary))] ring-opacity-20" 
              style={{ background: 'hsl(var(--muted) / 0.3)' }}>
           <img 
             src={logoImage} 
@@ -18,13 +18,13 @@ const MessageList = ({ messages, authUser, messageEndRef }) => {
             className="w-full h-full object-cover"
           />
         </div>
-        <p className="text-center text-lg font-medium mb-2">
+        <p className="text-center text-base sm:text-lg font-medium mb-2">
           {selectedChat === "group" 
             ? "Welcome to the community!" 
             : "Start your wildlife photography conversation"
           }
         </p>
-        <p className="text-center text-sm opacity-70">
+        <p className="text-center text-xs sm:text-sm opacity-70 max-w-xs sm:max-w-sm">
           {selectedChat === "group" 
             ? "Be the first to share something with the community." 
             : "Send a message to begin your conversation."
@@ -35,7 +35,7 @@ const MessageList = ({ messages, authUser, messageEndRef }) => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-2" style={{ paddingBottom: '1rem' }}>
+    <div className="flex-1 overflow-y-auto scrollbar-thin px-2 sm:px-4 py-2 sm:py-4 space-y-2 min-h-0">
       {messages.map((message, index) => {
         // Safety check for senderId
         if (!message.senderId || !message._id) {
@@ -58,11 +58,11 @@ const MessageList = ({ messages, authUser, messageEndRef }) => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
-            className={`flex items-end gap-2 mb-1 ${isFromMe ? "justify-end" : "justify-start"}`}
+            className={`flex items-end gap-1 sm:gap-2 mb-1 ${isFromMe ? "justify-end" : "justify-start"}`}
           >
             {/* Avatar (for others, on left) */}
             {!isFromMe && showAvatar && selectedChat === "group" && (
-              <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 mb-1">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full overflow-hidden flex-shrink-0 mb-1">
                 <img
                   src={message.senderId?.profilePic || `https://api.dicebear.com/7.x/initials/svg?seed=${message.senderId?.fullName || 'Unknown'}`}
                   alt="Profile"
@@ -70,13 +70,13 @@ const MessageList = ({ messages, authUser, messageEndRef }) => {
                 />
               </div>
             )}
-            {!isFromMe && !showAvatar && selectedChat === "group" && <div className="w-6 flex-shrink-0" />}
+            {!isFromMe && !showAvatar && selectedChat === "group" && <div className="w-5 sm:w-6 flex-shrink-0" />}
 
             {/* Message Content */}
-            <div className={`${isFromMe ? "order-1" : "order-2"}`}>
+            <div className={`${isFromMe ? "order-1" : "order-2"} max-w-[85%] sm:max-w-[75%] md:max-w-[65%]`}>
               {/* Name (for group chats and others) */}
               {selectedChat === "group" && !isFromMe && showAvatar && (
-                <div className="text-xs mb-1 ml-3 text-muted-foreground font-medium">
+                <div className="text-xs mb-1 ml-2 sm:ml-3 text-muted-foreground font-medium truncate">
                   {message.senderId?.fullName || 'Unknown User'}
                 </div>
               )}
@@ -84,8 +84,14 @@ const MessageList = ({ messages, authUser, messageEndRef }) => {
               {/* Message Bubble */}
               <div
                 className={`
-                  px-3 py-2 ${isFromMe ? "chat-bubble-sent ml-auto" : "chat-bubble-received"}
+                  px-2 sm:px-3 py-2 text-sm sm:text-base leading-relaxed break-words
+                  ${isFromMe ? "chat-bubble-sent ml-auto" : "chat-bubble-received"}
                 `}
+                style={{
+                  maxWidth: 'min(280px, 85vw)', // Responsive max width
+                  wordWrap: 'break-word',
+                  overflowWrap: 'break-word'
+                }}
               >
                 {/* Message Image */}
                 {message.image && (
@@ -94,7 +100,10 @@ const MessageList = ({ messages, authUser, messageEndRef }) => {
                       src={message.image}
                       alt="Shared content"
                       className="max-w-full h-auto rounded-lg cursor-pointer"
-                      style={{ maxWidth: '250px' }}
+                      style={{ 
+                        maxWidth: 'min(250px, 70vw)', // Responsive max width
+                        minWidth: '150px' 
+                      }}
                       onClick={() => window.open(message.image, '_blank')}
                     />
                   </div>
@@ -102,13 +111,13 @@ const MessageList = ({ messages, authUser, messageEndRef }) => {
 
                 {/* Message Text */}
                 {message.text && (
-                  <p className="text-sm leading-relaxed break-words mb-1">
+                  <p className="break-words mb-1">
                     {message.text}
                   </p>
                 )}
 
                 {/* Message Time */}
-                <div className={`text-xs text-right opacity-70 ${isFromMe ? 'text-primary-foreground' : 'text-muted-foreground'} flex items-center justify-end gap-1`}>
+                <div className={`text-xs text-right opacity-70 ${isFromMe ? 'text-primary-foreground' : 'text-muted-foreground'} flex items-center justify-end gap-1 mt-1`}>
                   <span>{formatMessageTime(message.createdAt)}</span>
                   <MessageStatus message={message} isFromMe={isFromMe} />
                 </div>

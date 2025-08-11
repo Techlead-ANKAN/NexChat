@@ -326,9 +326,16 @@ export const getGroupMessages = async (req, res) => {
     const messages = await Message.find({ chatType: "group" })
       .populate("senderId", "fullName profilePic")
       .sort({ createdAt: 1 })
-      .limit(100); // Limit to last 100 messages for performance
+      .limit(100) // Limit to last 100 messages for performance
+      .lean(); // Use lean() for better performance and to ensure seenBy field is included
 
-    res.status(200).json(messages);
+    // Ensure seenBy field is included in the response
+    const messagesWithSeenBy = messages.map(msg => ({
+      ...msg,
+      seenBy: msg.seenBy || [] // Ensure seenBy is always an array
+    }));
+
+    res.status(200).json(messagesWithSeenBy);
   } catch (error) {
     console.log("Error in getGroupMessages controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });
@@ -408,8 +415,11 @@ export const markGroupMessageAsSeen = async (req, res) => {
     const { messageId } = req.params;
     const userId = req.user._id;
 
+    console.log(`Marking group message ${messageId} as seen by user ${userId}`);
+
     const message = await Message.findById(messageId);
     if (!message) {
+      console.log(`Message ${messageId} not found`);
       return res.status(404).json({ error: "Message not found" });
     }
 
@@ -417,6 +427,7 @@ export const markGroupMessageAsSeen = async (req, res) => {
     if (!message.seenBy.includes(userId)) {
       message.seenBy.push(userId);
       await message.save();
+      console.log(`User ${userId} added to seenBy array for message ${messageId}`);
 
       // Notify sender about the new view
       const senderSocketId = getReceiverSocketId(message.senderId);
@@ -427,11 +438,32 @@ export const markGroupMessageAsSeen = async (req, res) => {
           seenAt: new Date()
         });
       }
+    } else {
+      console.log(`User ${userId} already in seenBy array for message ${messageId}`);
     }
 
     res.status(200).json({ message: "Message marked as seen" });
   } catch (error) {
     console.log("Error in markGroupMessageAsSeen controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getGroupUnreadCount = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Count group messages that the user hasn't seen
+    const unreadCount = await Message.countDocuments({
+      chatType: "group",
+      senderId: { $ne: userId }, // Not sent by the current user
+      seenBy: { $ne: userId } // Not seen by the current user
+    });
+
+    console.log(`Group unread count for user ${userId}: ${unreadCount}`);
+    res.status(200).json({ count: unreadCount });
+  } catch (error) {
+    console.log("Error in getGroupUnreadCount controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };

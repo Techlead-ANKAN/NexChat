@@ -29,6 +29,40 @@ const HomePage = () => {
     };
   }, [socket, subscribeToMessages, unsubscribeFromMessages, fetchUnreadCounts]);
 
+  // Periodic refresh of unread counts to ensure synchronization
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Only refresh if not currently viewing any chat to prevent badge reappearance
+      if (!selectedUser && selectedChat !== "group") {
+        fetchUnreadCounts();
+      }
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [fetchUnreadCounts, selectedUser, selectedChat]);
+
+  // Refresh unread counts when user returns to the tab
+  useEffect(() => {
+    const handleFocus = () => {
+      // Only refresh if not currently viewing any chat
+      if (!selectedUser && selectedChat !== "group") {
+        fetchUnreadCounts();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && !selectedUser && selectedChat !== "group") {
+        fetchUnreadCounts();
+      }
+    });
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
+    };
+  }, [fetchUnreadCounts, selectedUser, selectedChat]);
+
   const showChat = selectedUser || selectedChat === "group";
 
   return (

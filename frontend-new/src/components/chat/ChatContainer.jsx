@@ -68,7 +68,8 @@ const ChatContainer = () => {
     <div className={`flex-1 flex flex-col h-full chat-container ${isMobile ? 'w-full' : ''}`}>
       <ChatHeader />
       
-      <div className="flex-1 overflow-hidden relative">
+      {/* Messages Container with proper scrolling */}
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         <MessageList messages={messages} authUser={authUser} messageEndRef={messageEndRef} />
       </div>
       

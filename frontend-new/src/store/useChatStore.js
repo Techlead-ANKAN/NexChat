@@ -11,6 +11,9 @@ export const useChatStore = create((set, get) => ({
   isUsersLoading: false,
   isMessagesLoading: false,
   unreadCounts: {},
+  
+  // Track when we last viewed group to prevent false counts
+  lastGroupViewTime: null,
 
   // Helper function to remove duplicate messages
   removeDuplicateMessages: (messages) => {
@@ -47,6 +50,14 @@ export const useChatStore = create((set, get) => ({
       // Mark messages as read
       await axiosInstance.post("/messages/mark-read", { senderId: userId });
       
+      // Immediately reset unread count for this user for better UX
+      set(state => ({
+        unreadCounts: {
+          ...state.unreadCounts,
+          [userId]: 0
+        }
+      }));
+      
       // Update unread counts
       get().fetchUnreadCounts();
     } catch (error) {
@@ -64,21 +75,36 @@ export const useChatStore = create((set, get) => ({
       const uniqueMessages = get().removeDuplicateMessages(res.data);
       set({ messages: uniqueMessages });
       
-      // Mark group messages as seen
+      // Mark group messages as seen (for backend tracking, not for badge)
       const authUser = useAuthStore.getState().authUser;
-      const unseenMessages = uniqueMessages.filter(msg => 
-        msg.senderId._id !== authUser._id && 
-        (!msg.seenBy || !msg.seenBy.includes(authUser._id))
-      );
+      const unseenMessages = uniqueMessages.filter(msg => {
+        const isOwnMessage = msg.senderId._id === authUser._id;
+        const isSeenByUser = msg.seenBy && msg.seenBy.some(seenUserId => 
+          seenUserId.toString() === authUser._id.toString()
+        );
+        return !isOwnMessage && !isSeenByUser;
+      });
       
       // Mark each unseen message as seen
-      for (const message of unseenMessages) {
-        try {
-          await axiosInstance.put(`/messages/group/seen/${message._id}`);
-        } catch (error) {
-          console.log("Error marking group message as seen:", error);
+      const markPromises = unseenMessages.map(message => 
+        axiosInstance.put(`/messages/group/seen/${message._id}`)
+          .catch(error => console.log("Error marking group message as seen:", error))
+      );
+      
+      // Wait for all messages to be marked as seen
+      await Promise.all(markPromises);
+      
+      // Update last group view time
+      set({ lastGroupViewTime: Date.now() });
+      
+      // Update unread counts after marking messages as seen with longer delay
+      setTimeout(() => {
+        const { selectedChat } = get();
+        // Only fetch if we're not in group chat anymore
+        if (selectedChat !== "group") {
+          get().fetchUnreadCounts();
         }
-      }
+      }, 1000); // Longer delay to ensure backend is fully updated
     } catch (error) {
       toast.error(error.response.data.message);
     } finally {
@@ -108,7 +134,16 @@ export const useChatStore = create((set, get) => ({
   fetchUnreadCounts: async () => {
     try {
       const res = await axiosInstance.get("/messages/unread-counts");
-      set({ unreadCounts: res.data });
+      
+      // Transform array response to object format
+      const unreadCountsObj = {};
+      res.data.forEach(item => {
+        if (item._id && item.count) {
+          unreadCountsObj[item._id] = item.count;
+        }
+      });
+      
+      set({ unreadCounts: unreadCountsObj });
     } catch (error) {
       console.error("Error fetching unread counts:", error);
     }
@@ -147,7 +182,18 @@ export const useChatStore = create((set, get) => ({
         });
       } else if (isPrivateMessage && !isRelevantToCurrentChat) {
         // Update unread counts for other chats
-        get().fetchUnreadCounts();
+        const senderId = newMessage.senderId?._id || newMessage.senderId;
+        const { authUser } = useAuthStore.getState();
+        
+        // Only increment if message is not from the current user
+        if (senderId !== authUser._id) {
+          set(state => ({
+            unreadCounts: {
+              ...state.unreadCounts,
+              [senderId]: (state.unreadCounts[senderId] || 0) + 1
+            }
+          }));
+        }
       }
     });
 
@@ -161,9 +207,33 @@ export const useChatStore = create((set, get) => ({
           const updatedMessages = get().removeDuplicateMessages([...state.messages, newGroupMessage]);
           return { messages: updatedMessages };
         });
-      } else {
-        // Update unread counts for group chat when not viewing it
-        get().fetchUnreadCounts();
+      }
+      // Note: No unread count tracking for group messages - badge removed
+    });
+
+    // Listen for unread count updates
+    socket.on("unreadCountUpdate", (data) => {
+      console.log("Received unread count update:", data);
+      if (data.type === "private") {
+        set(state => ({
+          unreadCounts: {
+            ...state.unreadCounts,
+            [data.userId]: data.count
+          }
+        }));
+      }
+      // Note: Group unread count updates removed - badge functionality removed
+    });
+
+    // Listen for group message seen events
+    socket.on("groupMessageSeen", (data) => {
+      const { selectedChat } = get();
+      // Only refresh unread counts if we're not currently viewing the group
+      // This prevents the badge from reappearing immediately after marking as seen
+      if (selectedChat !== "group") {
+        setTimeout(() => {
+          get().fetchUnreadCounts();
+        }, 500);
       }
     });
 
@@ -211,13 +281,39 @@ export const useChatStore = create((set, get) => ({
     socket?.off("messageDelivered");
     socket?.off("messagesRead");
     socket?.off("groupMessageSeen");
+    socket?.off("unreadCountUpdate");
   },
 
   setSelectedUser: (selectedUser) => {
     set({ selectedUser, selectedChat: null });
+    
+    // If selecting a user, reset their unread count immediately for better UX
+    if (selectedUser) {
+      set(state => ({
+        unreadCounts: {
+          ...state.unreadCounts,
+          [selectedUser._id]: 0
+        }
+      }));
+    }
   },
 
   setSelectedChat: (selectedChat) => {
     set({ selectedChat, selectedUser: null });
+    
+    // Update last group view time when entering group chat
+    if (selectedChat === "group") {
+      set({ lastGroupViewTime: Date.now() });
+    }
+    
+    // If selecting a specific chat, reset its unread count immediately
+    if (selectedChat && selectedChat._id) {
+      set(state => ({
+        communityUnreadCounts: {
+          ...state.communityUnreadCounts,
+          [selectedChat._id]: 0
+        }
+      }));
+    }
   },
 }));

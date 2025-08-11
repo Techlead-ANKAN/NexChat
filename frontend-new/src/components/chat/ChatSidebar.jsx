@@ -177,11 +177,26 @@ const ChatSidebar = () => {
                     </div>
                   )}
 
-                  {/* Unread Badge */}
+                  {/* WhatsApp-Style Unread Message Count Badge - Top Left */}
                   {hasUnread && (
-                    <span className="absolute -top-1 -right-1 bg-gold-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                      className="absolute -top-1 -left-1 z-10"
+                    >
+                      <div className={cn(
+                        "bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg border-2 border-wild-950",
+                        unreadCount > 99 ? "w-7 h-5 px-1" : 
+                        unreadCount > 9 ? "w-6 h-5" : "w-5 h-5"
+                      )}>
+                        <span className="leading-none">
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      </div>
+                      {/* Subtle pulsing animation for new messages */}
+                      <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-30"></div>
+                    </motion.div>
                   )}
                 </div>
 

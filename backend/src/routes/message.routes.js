@@ -37,6 +37,7 @@ import {
   sendGroupMessage,
   markMessageAsDelivered,
   markGroupMessageAsSeen,
+  getGroupUnreadCount,
 } from "../controllers/message.controller.js";
 
 const router = express.Router();
@@ -52,6 +53,7 @@ router.put("/group/seen/:messageId", protectRoute, markGroupMessageAsSeen);
 
 // Group chat routes
 router.get("/group/messages", protectRoute, getGroupMessages);
+router.get("/group/unread-count", protectRoute, getGroupUnreadCount);
 router.post("/group/send", protectRoute, sendGroupMessage);
 
 // 👇 Dynamic route goes LAST

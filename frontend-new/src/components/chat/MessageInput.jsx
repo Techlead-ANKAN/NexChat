@@ -59,7 +59,7 @@ const MessageInput = () => {
   };
 
   return (
-    <div className="message-input backdrop-blur-sm border-t p-4">
+    <div className="message-input backdrop-blur-sm border-t p-3 sm:p-4 flex-shrink-0">
       {/* Image Preview */}
       <AnimatePresence>
         {imagePreview && (
