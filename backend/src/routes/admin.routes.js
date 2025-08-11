@@ -8,7 +8,8 @@ import {
   deleteMessage,
   getDashboardStats,
   getConversation,
-  promoteToAdmin
+  promoteToAdmin,
+  sendWarningToUser
 } from "../controllers/admin.controller.js";
 
 const router = express.Router();
@@ -21,6 +22,7 @@ router.get("/users", adminRoute, getAllUsers);
 router.get("/users/:userId", adminRoute, getUserDetails);
 router.patch("/users/:userId/toggle-block", adminRoute, toggleUserBlock);
 router.patch("/users/:userId/promote", adminRoute, promoteToAdmin);
+router.post("/users/:userId/warn", adminRoute, sendWarningToUser);
 
 // Message management routes
 router.get("/messages", adminRoute, getAllMessages);

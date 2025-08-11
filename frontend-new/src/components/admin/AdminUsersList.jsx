@@ -16,7 +16,8 @@ import {
   Calendar,
   MessageCircle,
   Send,
-  Inbox
+  Inbox,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -37,11 +38,17 @@ const AdminUsersList = () => {
     toggleUserBlock,
     promoteToAdmin,
     getUserDetails,
-    clearSelectedUser
+    clearSelectedUser,
+    sendWarning
   } = useAdminStore();
 
   const [searchInput, setSearchInput] = useState(userFilters.search);
   const [showFilters, setShowFilters] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [warningUser, setWarningUser] = useState(null);
+  const [warningMessage, setWarningMessage] = useState("");
+  const [warningSeverity, setWarningSeverity] = useState("moderate");
+  const [isWarningLoading, setIsWarningLoading] = useState(false);
 
   useEffect(() => {
     getAllUsers();
@@ -77,11 +84,36 @@ const AdminUsersList = () => {
         case 'view':
           await getUserDetails(userId);
           break;
+        case 'warn':
+          const user = users.find(u => u._id === userId);
+          setWarningUser(user);
+          setShowWarningModal(true);
+          break;
         default:
           break;
       }
     } catch (error) {
       console.error(`Error performing ${action}:`, error);
+    }
+  };
+
+  const handleSendWarning = async () => {
+    if (!warningMessage.trim() || !warningUser) return;
+    
+    setIsWarningLoading(true);
+    try {
+      await sendWarning(warningUser._id, warningMessage.trim(), warningSeverity);
+      
+      setShowWarningModal(false);
+      setWarningMessage("");
+      setWarningSeverity("moderate");
+      setWarningUser(null);
+      // Refresh users list to show updated warning count
+      getAllUsers();
+    } catch (error) {
+      console.error('Error sending warning:', error);
+    } finally {
+      setIsWarningLoading(false);
     }
   };
 
@@ -258,6 +290,7 @@ const AdminUsersList = () => {
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Email</th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Role</th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
+                <th className="text-left p-4 text-sm font-medium text-muted-foreground">Warnings</th>
                 <th className="text-left p-4 text-sm font-medium text-muted-foreground">Joined</th>
                 <th className="text-right p-4 text-sm font-medium text-muted-foreground">Actions</th>
               </tr>
@@ -304,6 +337,24 @@ const AdminUsersList = () => {
                     </span>
                   </td>
                   <td className="p-4">
+                    <div className="flex items-center gap-1">
+                      {user.warningCount > 0 ? (
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                          user.warningCount >= 3 
+                            ? 'bg-red-500/20 text-red-400' 
+                            : user.warningCount >= 2
+                            ? 'bg-orange-500/20 text-orange-400'
+                            : 'bg-yellow-500/20 text-yellow-400'
+                        }`}>
+                          <AlertTriangle className="w-3 h-3" />
+                          {user.warningCount}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">None</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="p-4">
                     <p className="text-sm text-muted-foreground">
                       {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
                     </p>
@@ -321,6 +372,16 @@ const AdminUsersList = () => {
                       
                       {user.role !== 'admin' && (
                         <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleUserAction(user._id, 'warn')}
+                            className="text-yellow-400 hover:text-yellow-300"
+                            title="Send Warning"
+                          >
+                            <AlertTriangle className="w-4 h-4" />
+                          </Button>
+                          
                           <Button
                             size="sm"
                             variant="ghost"
@@ -583,6 +644,145 @@ const AdminUsersList = () => {
                   </Button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Warning Modal */}
+      {showWarningModal && warningUser && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-wild-900/95 backdrop-blur-lg border border-wild-700/50 rounded-2xl shadow-2xl max-w-lg w-full">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-wild-700/30">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-yellow-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">
+                    Send Warning
+                  </h3>
+                  <p className="text-sm text-wild-300">
+                    To {warningUser.fullName}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowWarningModal(false);
+                  setWarningMessage("");
+                  setWarningSeverity("moderate");
+                  setWarningUser(null);
+                }}
+                className="text-wild-400 hover:text-white hover:bg-wild-800/50 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="p-6 space-y-6">
+              {/* User Info Card */}
+              <div className="bg-wild-800/30 rounded-lg p-4 border border-wild-700/20">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={warningUser.profilePic || `https://api.dicebear.com/7.x/initials/svg?seed=${warningUser.fullName}`}
+                    alt={warningUser.fullName}
+                    className="w-10 h-10 rounded-full object-cover border-2 border-wild-600"
+                  />
+                  <div>
+                    <p className="font-medium text-white">{warningUser.fullName}</p>
+                    <p className="text-sm text-wild-400">{warningUser.email}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Severity Selection */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-white">
+                  Warning Severity
+                </label>
+                <select
+                  value={warningSeverity}
+                  onChange={(e) => setWarningSeverity(e.target.value)}
+                  className="w-full p-3 rounded-lg bg-wild-800/50 border border-wild-600/50 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none transition-all duration-200"
+                  style={{
+                    colorScheme: 'dark'
+                  }}
+                >
+                  <option value="mild" className="bg-wild-800 text-white">⚠️ Mild - Gentle reminder</option>
+                  <option value="moderate" className="bg-wild-800 text-white">⚠️ Moderate - Official warning</option>
+                  <option value="severe" className="bg-wild-800 text-white">🚨 Severe - Final warning</option>
+                </select>
+                
+                {/* Severity Description */}
+                <div className="text-xs text-wild-400 bg-wild-800/20 rounded-lg p-3">
+                  {warningSeverity === 'mild' && "A friendly reminder about community guidelines."}
+                  {warningSeverity === 'moderate' && "An official warning that will be recorded in the user's profile."}
+                  {warningSeverity === 'severe' && "A final warning before potential account restrictions."}
+                </div>
+              </div>
+
+              {/* Warning Message */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-white">
+                  Warning Message
+                </label>
+                <textarea
+                  value={warningMessage}
+                  onChange={(e) => setWarningMessage(e.target.value)}
+                  placeholder="Describe the violation and provide guidance for improvement..."
+                  className="w-full p-3 rounded-lg bg-wild-800/50 border border-wild-600/50 text-white placeholder-wild-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 focus:outline-none min-h-[120px] resize-y transition-all duration-200"
+                  maxLength={500}
+                />
+                <div className="flex justify-between items-center">
+                  <p className="text-xs text-wild-400">
+                    {warningMessage.length}/500 characters
+                  </p>
+                  <div className={`text-xs font-medium ${
+                    warningMessage.length > 450 ? 'text-red-400' : 
+                    warningMessage.length > 400 ? 'text-yellow-400' : 'text-wild-400'
+                  }`}>
+                    {500 - warningMessage.length} remaining
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex gap-3 p-6 border-t border-wild-700/30 bg-wild-800/20">
+              <Button
+                onClick={() => {
+                  setShowWarningModal(false);
+                  setWarningMessage("");
+                  setWarningSeverity("moderate");
+                  setWarningUser(null);
+                }}
+                variant="outline"
+                className="flex-1 border-wild-600/50 text-wild-300 hover:text-white hover:border-wild-500"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSendWarning}
+                disabled={!warningMessage.trim() || isWarningLoading}
+                className="flex-1 bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800 text-white font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              >
+                {isWarningLoading ? (
+                  <div className="flex items-center gap-2">
+                    <LoadingSpinner size="sm" />
+                    <span>Sending...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Send className="w-4 h-4" />
+                    <span>Send Warning</span>
+                  </div>
+                )}
+              </Button>
             </div>
           </div>
         </div>

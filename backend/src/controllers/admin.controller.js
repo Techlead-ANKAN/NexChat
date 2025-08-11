@@ -379,3 +379,88 @@ export const promoteToAdmin = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// Send admin warning to user
+export const sendWarningToUser = async (req, res) => {
+  try {
+    const { userId, warningMessage, severity = "moderate" } = req.body;
+    const adminId = req.user._id;
+
+    // Validate inputs
+    if (!userId || !warningMessage) {
+      return res.status(400).json({ error: "User ID and warning message are required" });
+    }
+
+    // Check if target user exists
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Get admin user
+    const adminUser = await User.findById(adminId);
+    if (!adminUser || adminUser.role !== "admin") {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    // Create warning message templates based on severity
+    const warningTemplates = {
+      mild: {
+        prefix: "⚠️ Community Guidelines Reminder",
+        suffix: "Please review our community guidelines. Continued violations may result in account restrictions."
+      },
+      moderate: {
+        prefix: "⚠️ Official Warning - Community Guidelines Violation",
+        suffix: "This is an official warning. Further violations may result in temporary suspension or account termination."
+      },
+      severe: {
+        prefix: "🚨 Final Warning - Serious Violation",
+        suffix: "This is your final warning. Any further violations will result in immediate account termination."
+      }
+    };
+
+    const template = warningTemplates[severity] || warningTemplates.moderate;
+    
+    const fullWarningMessage = `${template.prefix}\n\n${warningMessage}\n\n${template.suffix}\n\n--- \nWild By Nature Admin Team`;
+
+    // Create warning message in database
+    const warningMessageDoc = new Message({
+      senderId: adminId,
+      receiverId: userId,
+      text: fullWarningMessage,
+      isAdminWarning: true,
+      warningSeverity: severity
+    });
+
+    await warningMessageDoc.save();
+
+    // Update user's warning count and history
+    await User.findByIdAndUpdate(userId, {
+      $inc: { warningCount: 1 },
+      $push: { 
+        warnings: {
+          severity: severity,
+          reason: warningMessage,
+          givenBy: adminId,
+          givenAt: new Date()
+        }
+      },
+      $set: {
+        lastWarningAt: new Date()
+      }
+    });
+
+    // Populate the message for response
+    const populatedMessage = await Message.findById(warningMessageDoc._id)
+      .populate("senderId", "fullName email profilePic role")
+      .populate("receiverId", "fullName email");
+
+    res.status(200).json({
+      message: "Warning sent successfully",
+      warning: populatedMessage
+    });
+  } catch (error) {
+    console.log("Error in sendWarningToUser controller: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

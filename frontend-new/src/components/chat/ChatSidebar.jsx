@@ -170,10 +170,10 @@ const ChatSidebar = () => {
                     />
                   </div>
 
-                  {/* Online Status */}
+                  {/* Online Status - Enhanced Green Dot */}
                   {isOnline && (
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-nature-500 rounded-full border-2 border-wild-950 flex items-center justify-center">
-                      <Camera className="w-2 h-2 text-white" />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full border-2 border-wild-950 shadow-lg animate-pulse">
+                      <div className="w-full h-full bg-green-400 rounded-full animate-ping"></div>
                     </div>
                   )}
 

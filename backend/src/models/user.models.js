@@ -65,6 +65,38 @@ const userSchema = new mongoose.Schema(
       ref: "User", // Reference to the User model
       default: null, // No default value
     },
+
+    // Warning system fields
+    warningCount: {
+      type: Number, // Total number of warnings received
+      default: 0, // No warnings initially
+    },
+
+    warnings: [{
+      severity: {
+        type: String,
+        enum: ["mild", "moderate", "severe"],
+        required: true
+      },
+      reason: {
+        type: String,
+        required: true
+      },
+      givenBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+      },
+      givenAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+
+    lastWarningAt: {
+      type: Date, // Date of last warning received
+      default: null, // No default date
+    },
   },
   { timestamps: true } // Enabling timestamps for createdAt and updatedAt fields
 );

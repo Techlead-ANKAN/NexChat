@@ -72,6 +72,16 @@ const messageSchema = new mongoose.Schema(
       // Timestamp when message was delivered
       type: Date,
     },
+    // Admin warning specific fields
+    isAdminWarning: {
+      type: Boolean,
+      default: false,
+    },
+    warningSeverity: {
+      type: String,
+      enum: ["mild", "moderate", "severe"],
+      required: function() { return this.isAdminWarning; }
+    },
   },
   { timestamps: true } // Enabling timestamps for createdAt and updatedAt fields
 );

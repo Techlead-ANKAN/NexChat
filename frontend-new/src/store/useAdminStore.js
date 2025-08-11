@@ -162,6 +162,21 @@ export const useAdminStore = create((set, get) => ({
     }
   },
 
+  sendWarning: async (userId, warningMessage, severity = "moderate") => {
+    try {
+      const res = await axiosInstance.post(`/admin/users/${userId}/warn`, {
+        userId,
+        warningMessage,
+        severity
+      });
+      toast.success("Warning sent successfully");
+      return res.data;
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Failed to send warning");
+      throw error;
+    }
+  },
+
   // Filter Methods
   setUserFilters: (filters) => {
     set({ userFilters: { ...get().userFilters, ...filters } });
