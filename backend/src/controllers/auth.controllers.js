@@ -270,25 +270,103 @@ export const logout = (req, res) => {
   }
 };
 
+// Enhanced profile update function - supports fullName and profilePic
 export const updateProfile = async (req, res) => {
   try {
-    const { profilePic } = req.body;
+    const { fullName, profilePic } = req.body;
     const userId = req.user._id;
+    const updateData = {};
 
-    if (!profilePic) {
-      return res.status(400).json({ message: "Profile pic is required" });
+    // Update full name if provided
+    if (fullName !== undefined) {
+      updateData.fullName = fullName.trim();
     }
 
-    const uploadResponse = await cloudinary.uploader.upload(profilePic);
+    // Update profile picture if provided
+    if (profilePic) {
+      try {
+        const uploadResponse = await cloudinary.uploader.upload(profilePic);
+        updateData.profilePic = uploadResponse.secure_url;
+      } catch (cloudinaryError) {
+        console.log("Cloudinary upload error:", cloudinaryError);
+        return res.status(400).json({ message: "Failed to upload image" });
+      }
+    }
+
+    // If no updates provided
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: "No updates provided" });
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { profilePic: uploadResponse.secure_url },
-      { new: true }
+      updateData,
+      { new: true, select: "-password" }
     );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     res.status(200).json(updatedUser);
   } catch (error) {
-    console.log("error in update profile:", error);
+    console.log("Error in updateProfile:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Update email function
+export const updateEmail = async (req, res) => {
+  try {
+    const { newEmail } = req.body;
+    const userId = req.user._id;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { email: newEmail },
+      { new: true, select: "-password" }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "Email updated successfully",
+      user: updatedUser
+    });
+  } catch (error) {
+    console.log("Error in updateEmail:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Update password function
+export const updatePassword = async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    const userId = req.user._id;
+
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { password: hashedPassword },
+      { new: true, select: "-password" }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "Password updated successfully",
+      user: updatedUser
+    });
+  } catch (error) {
+    console.log("Error in updatePassword:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

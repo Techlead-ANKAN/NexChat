@@ -18,9 +18,17 @@ import {
   logout,
   signup,
   updateProfile,
+  updateEmail,
+  updatePassword,
   checkAuth
 } from "../controllers/auth.controllers.js"; // Importing authentication controller functions
 import { protectRoute } from "../middlewares/auth.middleware.js"; // Importing middleware to protect routes
+import { 
+  validateProfileUpdate, 
+  validateEmailUpdate, 
+  validatePasswordUpdate, 
+  rateLimitProfileUpdates 
+} from "../middlewares/validation.middleware.js"; // Importing validation middleware
 
 const router = express.Router(); // Creating a new router instance
 
@@ -33,8 +41,14 @@ router.post("/login", login);
 // Route for user logout, calls the logout function from the controller
 router.post("/logout", logout);
 
-// Route for updating user profile, protected by middleware, calls the updateProfile function from the controller
-router.put("/update-profile", protectRoute, updateProfile);
+// Route for updating user profile (fullName and profilePic), protected by middleware and validation
+router.put("/update-profile", protectRoute, rateLimitProfileUpdates, validateProfileUpdate, updateProfile);
+
+// Route for updating user email, protected by middleware and validation
+router.put("/update-email", protectRoute, rateLimitProfileUpdates, validateEmailUpdate, updateEmail);
+
+// Route for updating user password, protected by middleware and validation
+router.put("/update-password", protectRoute, rateLimitProfileUpdates, validatePasswordUpdate, updatePassword);
 
 // Route for checking user authentication status, protected by middleware, calls the checkAuth function from the controller
 router.get("/check", protectRoute, checkAuth);
