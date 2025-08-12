@@ -9,7 +9,11 @@ import {
   getDashboardStats,
   getConversation,
   promoteToAdmin,
-  sendWarningToUser
+  sendWarningToUser,
+  clearAllMessages,
+  getClearMessagesStats,
+  getAuditLogs,
+  getAuditStats
 } from "../controllers/admin.controller.js";
 
 const router = express.Router();
@@ -28,5 +32,13 @@ router.post("/users/:userId/warn", adminRoute, sendWarningToUser);
 router.get("/messages", adminRoute, getAllMessages);
 router.delete("/messages/:messageId", adminRoute, deleteMessage);
 router.get("/conversations/:user1Id/:user2Id", adminRoute, getConversation);
+
+// Bulk operations
+router.get("/messages/clear/stats", adminRoute, getClearMessagesStats);
+router.delete("/messages/clear/all", adminRoute, clearAllMessages);
+
+// Audit logs
+router.get("/audit/logs", adminRoute, getAuditLogs);
+router.get("/audit/stats", adminRoute, getAuditStats);
 
 export default router;

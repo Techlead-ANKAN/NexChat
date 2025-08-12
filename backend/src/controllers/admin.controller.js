@@ -1,6 +1,9 @@
 import User from "../models/user.models.js";
 import Message from "../models/message.models.js";
+import AuditLog from "../models/audit.models.js";
 import mongoose from "mongoose";
+import cloudinary from "../lib/cloudinary.js";
+import { io, emitAllMessagesCleared } from "../lib/socket.js";
 
 // Get all users for admin dashboard
 export const getAllUsers = async (req, res) => {
@@ -462,5 +465,362 @@ export const sendWarningToUser = async (req, res) => {
   } catch (error) {
     console.log("Error in sendWarningToUser controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * Clear All Messages - Admin Only Feature
+ * Deletes all messages from database and cleans up Cloudinary storage
+ * Preserves user profile pictures
+ */
+export const clearAllMessages = async (req, res) => {
+  try {
+    const { confirmation } = req.body;
+    
+    // Security check: require confirmation text
+    if (confirmation !== "DELETE ALL MESSAGES") {
+      return res.status(400).json({ 
+        error: "Confirmation required. Type 'DELETE ALL MESSAGES' to proceed." 
+      });
+    }
+
+    // Step 1: Get statistics before deletion
+    const totalMessages = await Message.countDocuments();
+    const messagesWithImages = await Message.countDocuments({ 
+      image: { $exists: true, $ne: "" } 
+    });
+
+    console.log(`🗑️ Admin ${req.user.fullName} initiated bulk message deletion:`);
+    console.log(`   📊 Total messages to delete: ${totalMessages}`);
+    console.log(`   🖼️ Messages with images: ${messagesWithImages}`);
+
+    // Step 2: Get all message images for Cloudinary cleanup
+    const messageImages = await Message.find({ 
+      image: { $exists: true, $ne: "" } 
+    }).select("image");
+
+    // Step 3: Extract Cloudinary public IDs from message images
+    const messageImageUrls = messageImages.map(msg => msg.image);
+    const messagePublicIds = extractCloudinaryPublicIds(messageImageUrls);
+
+    // Step 4: Get all user profile pictures to avoid deleting them
+    const userProfiles = await User.find({ 
+      profilePic: { $exists: true, $ne: "" } 
+    }).select("profilePic");
+    
+    const profilePicUrls = userProfiles.map(user => user.profilePic);
+    const profilePublicIds = extractCloudinaryPublicIds(profilePicUrls);
+
+    // Step 5: Filter out profile pictures from deletion list
+    const imagesToDelete = messagePublicIds.filter(id => 
+      !profilePublicIds.includes(id)
+    );
+
+    console.log(`   🔒 Profile pictures to preserve: ${profilePublicIds.length}`);
+    console.log(`   🗑️ Message images to delete: ${imagesToDelete.length}`);
+
+    // Step 6: Delete images from Cloudinary in batches
+    let cloudinaryDeletionResults = { deleted: 0, failed: 0, errors: [] };
+    
+    if (imagesToDelete.length > 0) {
+      try {
+        // Cloudinary allows max 100 resources per delete request
+        const batchSize = 100;
+        
+        for (let i = 0; i < imagesToDelete.length; i += batchSize) {
+          const batch = imagesToDelete.slice(i, i + batchSize);
+          
+          try {
+            const deleteResult = await cloudinary.api.delete_resources(batch, {
+              resource_type: "image"
+            });
+            
+            cloudinaryDeletionResults.deleted += Object.keys(deleteResult.deleted || {}).length;
+            
+            // Log any failed deletions
+            if (deleteResult.partial) {
+              cloudinaryDeletionResults.failed += batch.length - Object.keys(deleteResult.deleted || {}).length;
+              cloudinaryDeletionResults.errors.push(`Batch ${i}-${i + batchSize}: Some images failed to delete`);
+            }
+            
+          } catch (batchError) {
+            console.error(`Error deleting Cloudinary batch ${i}-${i + batchSize}:`, batchError);
+            cloudinaryDeletionResults.failed += batch.length;
+            cloudinaryDeletionResults.errors.push(`Batch ${i}-${i + batchSize}: ${batchError.message}`);
+          }
+        }
+        
+      } catch (cloudinaryError) {
+        console.error("Cloudinary deletion error:", cloudinaryError);
+        cloudinaryDeletionResults.errors.push(`Cloudinary API error: ${cloudinaryError.message}`);
+      }
+    }
+
+    // Step 7: Delete all messages from database
+    const deleteResult = await Message.deleteMany({});
+    
+    // Step 8: Log admin action for audit trail
+    const auditLogData = {
+      action: "BULK_MESSAGE_DELETION",
+      adminId: req.user._id,
+      adminName: req.user.fullName,
+      adminEmail: req.user.email,
+      stats: {
+        messagesDeleted: deleteResult.deletedCount,
+        imagesDeletedFromCloudinary: cloudinaryDeletionResults.deleted,
+        imagesDeletionFailed: cloudinaryDeletionResults.failed,
+        profilePicturesPreserved: profilePublicIds.length,
+        totalMessagesBeforeDeletion: totalMessages,
+        messagesWithImagesBeforeDeletion: messagesWithImages
+      },
+      errorMessages: cloudinaryDeletionResults.errors,
+      ipAddress: req.ip || req.connection.remoteAddress,
+      userAgent: req.get('User-Agent')
+    };
+
+    // Save audit log to database
+    try {
+      const auditLog = new AuditLog(auditLogData);
+      await auditLog.save();
+      console.log("📋 Admin Action Audit Log saved to database:", auditLog._id);
+    } catch (auditError) {
+      console.error("Failed to save audit log:", auditError);
+    }
+
+    // Also log to console for immediate visibility
+    console.log("📋 Admin Action Audit Log:", JSON.stringify(auditLogData, null, 2));
+
+    // Step 9: Emit real-time update to all connected clients
+    try {
+      io.emit("allMessagesCleared", {
+        message: "All messages have been cleared by administrator",
+        timestamp: new Date(),
+        clearedBy: req.user.fullName
+      });
+    } catch (socketError) {
+      console.error("Socket emission error:", socketError);
+    }
+
+    // Step 10: Notify all connected users via socket
+    emitAllMessagesCleared();
+
+    // Step 11: Send success response
+    res.status(200).json({
+      success: true,
+      message: "All messages cleared successfully",
+      stats: {
+        messagesDeleted: deleteResult.deletedCount,
+        imagesDeleted: cloudinaryDeletionResults.deleted,
+        imagesDeletionFailed: cloudinaryDeletionResults.failed,
+        profilePicturesPreserved: profilePublicIds.length,
+        totalProcessingTime: Date.now() - Date.now() // Will be very small since we're at the end
+      },
+      ...(cloudinaryDeletionResults.errors.length > 0 && {
+        warnings: {
+          message: "Some Cloudinary images could not be deleted",
+          errors: cloudinaryDeletionResults.errors
+        }
+      })
+    });
+
+  } catch (error) {
+    console.error("Error in clearAllMessages controller:", error);
+    res.status(500).json({ 
+      error: "Internal server error during message clearing",
+      details: error.message 
+    });
+  }
+};
+
+/**
+ * Get Clear Messages Statistics - Preview before deletion
+ */
+export const getClearMessagesStats = async (req, res) => {
+  try {
+    const totalMessages = await Message.countDocuments();
+    const messagesWithImages = await Message.countDocuments({ 
+      image: { $exists: true, $ne: "" } 
+    });
+    const totalUsers = await User.countDocuments();
+    const usersWithProfilePics = await User.countDocuments({ 
+      profilePic: { $exists: true, $ne: "" } 
+    });
+
+    // Get date range of messages
+    const oldestMessage = await Message.findOne().sort({ createdAt: 1 });
+    const newestMessage = await Message.findOne().sort({ createdAt: -1 });
+
+    res.status(200).json({
+      stats: {
+        totalMessages,
+        messagesWithImages,
+        messagesWithTextOnly: totalMessages - messagesWithImages,
+        totalUsers,
+        usersWithProfilePics,
+        dateRange: {
+          oldest: oldestMessage?.createdAt || null,
+          newest: newestMessage?.createdAt || null
+        }
+      },
+      warning: "This action will permanently delete all messages and cannot be undone.",
+      preservation: {
+        userAccounts: "Will be preserved",
+        profilePictures: "Will be preserved", 
+        userSettings: "Will be preserved",
+        adminLogs: "Will be preserved"
+      }
+    });
+
+  } catch (error) {
+    console.error("Error in getClearMessagesStats controller:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * Helper function to extract Cloudinary public IDs from URLs
+ */
+function extractCloudinaryPublicIds(urls) {
+  return urls
+    .filter(url => url && typeof url === 'string')
+    .map(url => {
+      try {
+        // Extract public ID from Cloudinary URL
+        // Example URL: https://res.cloudinary.com/demo/image/upload/v1234567890/sample.jpg
+        const matches = url.match(/\/v\d+\/(.+?)\./);
+        return matches ? matches[1] : null;
+      } catch (error) {
+        console.error("Error extracting public ID from URL:", url, error);
+        return null;
+      }
+    })
+    .filter(id => id !== null);
+}
+
+// Get audit logs for admin dashboard
+export const getAuditLogs = async (req, res) => {
+  try {
+    const { page = 1, limit = 20, action, adminId, startDate, endDate } = req.query;
+    
+    const filter = {};
+    
+    // Filter by action type
+    if (action) {
+      filter.action = action;
+    }
+    
+    // Filter by admin ID
+    if (adminId) {
+      filter.adminId = adminId;
+    }
+    
+    // Filter by date range
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) {
+        filter.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        filter.createdAt.$lte = new Date(endDate);
+      }
+    }
+    
+    const skip = (page - 1) * limit;
+    
+    const [logs, totalLogs] = await Promise.all([
+      AuditLog.find(filter)
+        .populate('adminId', 'fullName email profilePic')
+        .populate('targetUserId', 'fullName email')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      AuditLog.countDocuments(filter)
+    ]);
+    
+    const totalPages = Math.ceil(totalLogs / limit);
+    
+    res.status(200).json({
+      success: true,
+      logs,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages,
+        totalLogs,
+        hasNext: page < totalPages,
+        hasPrev: page > 1
+      }
+    });
+    
+  } catch (error) {
+    console.error("Error in getAuditLogs controller:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch audit logs",
+      error: error.message
+    });
+  }
+};
+
+// Get audit log statistics
+export const getAuditStats = async (req, res) => {
+  try {
+    const { days = 30 } = req.query;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(days));
+    
+    const [
+      totalActions,
+      actionsByType,
+      actionsByAdmin,
+      recentBulkDeletions
+    ] = await Promise.all([
+      // Total actions in the specified period
+      AuditLog.countDocuments({
+        createdAt: { $gte: startDate }
+      }),
+      
+      // Actions grouped by type
+      AuditLog.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        { $group: { _id: "$action", count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]),
+      
+      // Actions grouped by admin
+      AuditLog.aggregate([
+        { $match: { createdAt: { $gte: startDate } } },
+        { $group: { _id: { adminId: "$adminId", adminName: "$adminName" }, count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 10 }
+      ]),
+      
+      // Recent bulk deletions with stats
+      AuditLog.find({
+        action: "BULK_MESSAGE_DELETION",
+        createdAt: { $gte: startDate }
+      })
+      .select('adminName createdAt stats errors')
+      .sort({ createdAt: -1 })
+      .limit(10)
+    ]);
+    
+    res.status(200).json({
+      success: true,
+      period: `Last ${days} days`,
+      stats: {
+        totalActions,
+        actionsByType,
+        actionsByAdmin,
+        recentBulkDeletions
+      }
+    });
+    
+  } catch (error) {
+    console.error("Error in getAuditStats controller:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch audit statistics",
+      error: error.message
+    });
   }
 };

@@ -272,6 +272,21 @@ export const useChatStore = create((set, get) => ({
         )
       }));
     });
+
+    // Listen for admin clearing all messages
+    socket.on("allMessagesCleared", (data) => {
+      set({ 
+        messages: [],
+        unreadCounts: {},
+        communityUnreadCounts: {},
+        lastGroupViewTime: Date.now()
+      });
+      
+      // Show notification to user that admin has cleared all messages
+      if (window.showToast) {
+        window.showToast("All messages have been cleared by an administrator", "info");
+      }
+    });
   },
 
   unsubscribeFromMessages: () => {
@@ -282,6 +297,7 @@ export const useChatStore = create((set, get) => ({
     socket?.off("messagesRead");
     socket?.off("groupMessageSeen");
     socket?.off("unreadCountUpdate");
+    socket?.off("allMessagesCleared");
   },
 
   setSelectedUser: (selectedUser) => {

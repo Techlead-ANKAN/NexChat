@@ -12,12 +12,15 @@ import {
   Calendar,
   BarChart3,
   AlertTriangle,
-  Settings
+  Settings,
+  FileText
 } from "lucide-react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import AdminUsersList from "@/components/admin/AdminUsersList";
 import AdminMessagesList from "@/components/admin/AdminMessagesList";
 import AdminDashboardStats from "@/components/admin/AdminDashboardStats";
+import AdminSystemManagement from "@/components/admin/AdminSystemManagement";
+import AdminAuditLogs from "@/components/admin/AdminAuditLogs";
 
 const AdminDashboard = () => {
   const { authUser } = useAuthStore();
@@ -56,6 +59,18 @@ const AdminDashboard = () => {
       label: "Messages",
       icon: MessageSquare,
       component: AdminMessagesList
+    },
+    {
+      id: "system",
+      label: "System",
+      icon: Settings,
+      component: AdminSystemManagement
+    },
+    {
+      id: "audit",
+      label: "Audit Logs", 
+      icon: FileText,
+      component: AdminAuditLogs
     }
   ];
 

@@ -15,6 +15,13 @@ export function getReceiverSocketId(userId) {
   return userSocketMap[userId];
 }
 
+export function emitAllMessagesCleared() {
+  io.emit("allMessagesCleared", {
+    message: "All messages have been cleared by an administrator",
+    timestamp: new Date().toISOString()
+  });
+}
+
 // used to store online users
 const userSocketMap = {}; // {userId: socketId}
 
