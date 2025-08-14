@@ -9,11 +9,8 @@ import { useState, useEffect } from 'react';
  */
 export function decodeChatUserData(encryptedData, encryptionKey) {
     try {
-        // Decode base64
-        const decodedData = atob(encryptedData);
-        
-        // Parse the encrypted data (Laravel format)
-        const encryptedParts = JSON.parse(decodedData);
+        // Parse the encrypted data directly (Laravel already provides base64-encoded data)
+        const encryptedParts = JSON.parse(encryptedData);
         
         if (!encryptedParts.iv || !encryptedParts.value || !encryptedParts.mac) {
             throw new Error('Invalid encrypted data format');
@@ -57,6 +54,7 @@ export function decodeChatUserData(encryptedData, encryptionKey) {
         return null;
     }
 }
+
 
 /**
  * Get user data from URL parameters
