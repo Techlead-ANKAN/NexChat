@@ -9,19 +9,23 @@ import { useState, useEffect } from 'react';
  */
 export function decodeChatUserData(encryptedData, encryptionKey) {
     try {
-        // Parse the encrypted data directly (Laravel already provides base64-encoded data)
-        const encryptedParts = JSON.parse(encryptedData);
+        // Decode base64
+        const decodedData = atob(encryptedData);
         
-        if (!encryptedParts.iv || !encryptedParts.value || !encryptedParts.mac) {
-            throw new Error('Invalid encrypted data format');
-        }
+        // Extract IV (first 16 bytes) and encrypted data
+        const iv = decodedData.slice(0, 16);
+        const encrypted = decodedData.slice(16);
+        
+        // Convert encryption key to WordArray
+        const key = CryptoJS.enc.Utf8.parse(encryptionKey);
+        const ivWordArray = CryptoJS.lib.WordArray.create(iv);
         
         // Decrypt using AES-256-CBC
         const decrypted = CryptoJS.AES.decrypt(
-            encryptedParts.value,
-            CryptoJS.enc.Utf8.parse(encryptionKey),
+            { ciphertext: CryptoJS.lib.WordArray.create(encrypted) },
+            key,
             {
-                iv: CryptoJS.enc.Base64.parse(encryptedParts.iv),
+                iv: ivWordArray,
                 mode: CryptoJS.mode.CBC,
                 padding: CryptoJS.pad.Pkcs7
             }
