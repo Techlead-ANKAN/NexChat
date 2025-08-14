@@ -9,36 +9,20 @@ import { useState, useEffect } from 'react';
  */
 export function decodeChatUserData(encryptedData, encryptionKey) {
     try {
-        // Decode base64
-        const decodedData = atob(encryptedData);
+        // Convert URL-safe base64 back to standard base64
+        const standardBase64 = encryptedData.replace(/-/g, '+').replace(/_/g, '/');
         
-        // Extract IV (first 16 bytes) and encrypted data
-        const iv = decodedData.slice(0, 16);
-        const encrypted = decodedData.slice(16);
+        // Add padding if needed
+        const paddedBase64 = standardBase64 + '='.repeat((4 - standardBase64.length % 4) % 4);
         
-        // Convert encryption key to WordArray
-        const key = CryptoJS.enc.Utf8.parse(encryptionKey);
-        const ivWordArray = CryptoJS.lib.WordArray.create(iv);
-        
-        // Decrypt using AES-256-CBC
-        const decrypted = CryptoJS.AES.decrypt(
-            { ciphertext: CryptoJS.lib.WordArray.create(encrypted) },
-            key,
-            {
-                iv: ivWordArray,
-                mode: CryptoJS.mode.CBC,
-                padding: CryptoJS.pad.Pkcs7
-            }
-        );
-        
-        const decryptedString = decrypted.toString(CryptoJS.enc.Utf8);
-        
-        if (!decryptedString) {
-            throw new Error('Decryption failed');
-        }
+        // 4-layer base64 decoding
+        const layer4 = atob(paddedBase64);
+        const layer3 = atob(layer4);
+        const layer2 = atob(layer3);
+        const layer1 = atob(layer2);
         
         // Split the decrypted string by '||'
-        const userDataParts = decryptedString.split('||');
+        const userDataParts = layer1.split('||');
         
         if (userDataParts.length !== 5) {
             throw new Error('Invalid user data format');
