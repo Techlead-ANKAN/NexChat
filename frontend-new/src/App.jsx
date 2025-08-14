@@ -15,25 +15,35 @@ import SignUpPage from "./pages/SignUpPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import SSOTestPage from "./pages/SSOTestPage";
 
 function AppContent() {
-  const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
+  const { authUser, checkAuth, checkSSOAuth, isCheckingAuth, isSSOLoggingIn } = useAuthStore();
   const { initTheme } = useThemeStore();
   const location = useLocation();
 
   // Only check auth on protected routes
-  const isPublicRoute = ['/login', '/signup'].includes(location.pathname);
+  const isPublicRoute = ['/login', '/signup', '/sso-test'].includes(location.pathname);
 
   useEffect(() => {
     initTheme();
-    // Only check auth if not on public routes
-    if (!isPublicRoute) {
-      checkAuth();
-    }
-  }, [checkAuth, initTheme, isPublicRoute]);
+    
+    // Check for SSO authentication first
+    const checkSSO = async () => {
+      if (!isPublicRoute) {
+        const ssoSuccess = await checkSSOAuth();
+        if (!ssoSuccess) {
+          // Only check regular auth if SSO failed
+          checkAuth();
+        }
+      }
+    };
+    
+    checkSSO();
+  }, [checkAuth, checkSSOAuth, initTheme, isPublicRoute]);
 
   // Show loading only on protected routes
-  if (isCheckingAuth && !authUser && !isPublicRoute) {
+  if ((isCheckingAuth || isSSOLoggingIn) && !authUser && !isPublicRoute) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-wild-950 via-nature-950 to-wild-900 flex items-center justify-center">
         <LoadingSpinner size="lg" />
@@ -65,11 +75,15 @@ function AppContent() {
           />
           <Route 
             path="/settings" 
-            element={authUser ? <SettingsPage /> : <Navigate to="/login" />} 
+            element={authUser ? <SettingsPage /> : <Navigate to="/" />} 
           />
           <Route 
             path="/admin" 
             element={authUser && authUser.role === "admin" ? <AdminDashboard /> : <Navigate to="/" />} 
+          />
+          <Route 
+            path="/sso-test" 
+            element={<SSOTestPage />} 
           />
         </Routes>
       </main>

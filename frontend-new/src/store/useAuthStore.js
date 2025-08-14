@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
+import { getChatUserDataFromURL, validateUserData, mapSSOTypeToRole } from "../lib/sso-decoder.js";
+import { getSSOEncryptionKey } from "../config/sso.js";
 
 const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5001" : "/";
 
@@ -11,6 +13,7 @@ export const useAuthStore = create((set, get) => ({
   isLoggingIn: false,
   isUpdatingProfile: false,
   isCheckingAuth: true,
+  isSSOLoggingIn: false,
   onlineUsers: [],
   socket: null,
 
@@ -26,6 +29,52 @@ export const useAuthStore = create((set, get) => ({
         console.log("Error in checkAuth:", error);
       }
       set({ authUser: null, isCheckingAuth: false });
+    }
+  },
+
+  // SSO Authentication
+  checkSSOAuth: async () => {
+    try {
+      const encryptionKey = getSSOEncryptionKey();
+      const ssoUserData = getChatUserDataFromURL(encryptionKey);
+      
+      if (ssoUserData && validateUserData(ssoUserData)) {
+        console.log("SSO user data detected:", ssoUserData);
+        return await get().loginWithSSO(ssoUserData);
+      }
+      
+      return false;
+    } catch (error) {
+      console.error("Error checking SSO auth:", error);
+      return false;
+    }
+  },
+
+  loginWithSSO: async (ssoUserData) => {
+    set({ isSSOLoggingIn: true });
+    try {
+      const res = await axiosInstance.post("/sso/auth", ssoUserData);
+      
+      if (res.data.user) {
+        set({ authUser: res.data.user });
+        toast.success(`Welcome back, ${res.data.user.fullName}!`);
+        get().connectSocket();
+        
+        // Clear URL parameters after successful SSO login
+        const url = new URL(window.location);
+        url.searchParams.delete('ur');
+        window.history.replaceState({}, document.title, url.pathname);
+        
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error("SSO login error:", error);
+      toast.error(error.response?.data?.message || "SSO authentication failed");
+      return false;
+    } finally {
+      set({ isSSOLoggingIn: false });
     }
   },
 

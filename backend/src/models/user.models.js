@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String, // Specifying the data type as String
-      required: true, // Making the password field mandatory
+      required: false, // Making password optional for SSO users
       minlength: 6, // Setting a minimum length of 6 characters for the password
     },
 
@@ -48,6 +48,36 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"], // Only allow 'user' or 'admin' values
       default: "user", // Setting default role as 'user'
       required: true, // Making the role field mandatory
+    },
+
+    // SSO-related fields
+    ssoId: {
+      type: String, // External user ID from SSO system
+      unique: true, // Ensure uniqueness
+      sparse: true, // Allow null values
+    },
+
+    ssoType: {
+      type: String, // SSO user type (Member, Mentor, Admin)
+      enum: ["Member", "Mentor", "Admin"],
+    },
+
+    phone: {
+      type: String, // Phone number from SSO system
+    },
+
+    isSSOUser: {
+      type: Boolean, // Flag to identify SSO users
+      default: false,
+    },
+
+    ssoProvider: {
+      type: String, // Name of the SSO provider (e.g., "Laravel")
+      default: "Laravel",
+    },
+
+    lastSSOLogin: {
+      type: Date, // Last time user logged in via SSO
     },
 
     isBlocked: {
@@ -100,6 +130,9 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true } // Enabling timestamps for createdAt and updatedAt fields
 );
+
+// Index for SSO lookups
+userSchema.index({ ssoId: 1, ssoProvider: 1 });
 
 // Creating a User model based on the userSchema
 const User = mongoose.model("User", userSchema);

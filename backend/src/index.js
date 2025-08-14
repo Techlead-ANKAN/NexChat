@@ -103,6 +103,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import ssoRoutes from "./routes/sso.routes.js";
 import { connectDB } from "./lib/db.js";
 import cors from "cors";
 import { app, server } from "./lib/socket.js";
@@ -133,6 +134,7 @@ app.use(cors(corsOptions));
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/sso", ssoRoutes);
 
 // Serve static files in production
 if (process.env.NODE_ENV === "production") {
