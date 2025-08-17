@@ -1,0 +1,93 @@
+NEXCHAT - MAIN FEATURES
+
+1. 1-to-1 Chat
+- Private messaging between two users
+- Real-time message delivery
+- Message history
+- Typing indicators
+- Online/offline status
+- Unread message counts
+- User search and contact list
+
+2. Group Chat
+- Community group chat for all users
+- Real-time group messaging
+- See sender names and profile pictures
+- Group message history
+- All users can participate simultaneously
+- Group notifications
+
+3. Media Sharing
+- Send images in both private and group chats
+- Image preview before sending
+- Click to view full-size images
+- Support for various image formats
+- Cloudinary cloud storage
+- File upload with progress
+
+4. Admin Features
+- Admin Dashboard: Complete control panel
+- User Management: 
+  - View all users
+  - Block/unblock users
+  - Promote users to admin
+  - User statistics and details
+- Message Management:
+  - View all messages
+  - Delete inappropriate messages
+  - Clear all messages (bulk deletion)
+  - Message monitoring
+- System Control:
+  - User statistics (total users, active users)
+  - Message statistics (total messages)
+  - Audit logs (admin action history)
+  - System health monitoring
+  - Storage management
+
+WILD BY NATURE COMMUNITY GUIDELINES
+
+Welcome to our wildlife photography community! These guidelines ensure a respectful and inspiring environment for all nature enthusiasts.
+
+Content Standards
+- Share wildlife photography and nature experiences
+- Respect wildlife - no disturbing or harmful content
+- Authentic content - share your own photos and experiences
+- Appropriate language - keep conversations family-friendly
+
+Community Behavior
+- Be respectful to all community members
+- No harassment or bullying of any kind
+- Constructive feedback - offer helpful photography tips
+- Celebrate diversity - welcome photographers of all skill levels
+- No spam or excessive self-promotion
+
+Prohibited Content
+- No inappropriate images or offensive content
+- No political discussions - keep focus on wildlife
+- No personal attacks or hate speech
+- No commercial advertising without permission
+- No copyrighted material you don't own
+
+Consequences
+- First violation: Warning message
+- Second violation: Temporary suspension
+- Third violation: Permanent account termination
+- Severe violations: Immediate account termination
+
+Reporting
+- Report inappropriate content to admins
+- Use the admin contact system
+- Provide specific details when reporting
+
+Community Goals
+- Share knowledge about wildlife photography
+- Inspire others with your nature experiences
+- Build connections with fellow photographers
+- Promote conservation and wildlife appreciation
+- Create a supportive learning environment
+
+By participating in our community, you agree to follow these guidelines. Admins reserve the right to take action on any violations to maintain a positive environment for all members.
+
+NexChat - Connecting wildlife photographers, one message at a time.
+
+
